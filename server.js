@@ -181,6 +181,19 @@ async function seedDefaultData() {
 }
 seedDefaultData();
 
+app.get('/manifest.json', (req, res) => {
+    res.type('application/manifest+json');
+    res.sendFile(path.join(__dirname, 'public/manifest.json'));
+});
+
+app.get('/sw.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/sw.js'));
+});
+
+app.get('/ping', (req, res) => {
+  res.send('Pong');
+});
+
 app.get('/', async (req, res) => {
     try {
         const likeData = await Like.findOne({ restaurantId: 'mjfood' });

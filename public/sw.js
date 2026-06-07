@@ -1,6 +1,8 @@
-const CACHE_NAME = 'mjfood-cache-v1';
+const CACHE_NAME = 'mjfood-cache-v1-1';
+const rutaBase = '/ddj';
+
 const ASSETS_TO_CACHE = [
-  '/',
+  rutaBase,
   '/manifest.json',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
@@ -17,6 +19,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -30,18 +33,35 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
+    }).then(() => {
+      return self.clients.claim();
     })
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+  
+  if (url.pathname === '/') {
+    event.respondWith(
+      caches.match(rutaBase).then((response) => {
+        if (response) {
+          return response;
+        }
+        return fetch(rutaBase);
+      })
+    );
+    return;
+  }
+  
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(request).then((response) => {
       if (response) {
         return response;
       }
 
-      return fetch(event.request).then((response) => {
+      return fetch(request).then((response) => {
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
@@ -56,9 +76,10 @@ self.addEventListener('fetch', (event) => {
 
         return response;
       }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
+        if (request.mode === 'navigate') {
+          return caches.match(rutaBase);
         }
+        return caches.match('/');
       });
     })
   );
@@ -68,7 +89,7 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: data.icon || 'https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp',
+    icon: data.icon || 'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp',
     badge: 'https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp',
     data: data.data
   };
@@ -81,6 +102,6 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    clients.openWindow(event.notification.data.url || rutaBase)
   );
 });
