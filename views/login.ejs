@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MJFOOD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+          --bg-color: #17171b;
+          --text-color: #e0e1e5;
+          --primary-color: #0cf106;
+          --light-shadow: #262222;
+          --dark-shadow: #000000;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .neumorphic-flat {
+            background: var(--bg-color);
+            box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow);
+        }
+        .neumorphic-input {
+            background: var(--bg-color);
+            box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
+            border: none;
+            outline: none;
+        }
+        .neumorphic-button {
+            background: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-md w-full neumorphic-flat rounded-2xl p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold" style="color: var(--primary-color);">Admin Login</h1>
+            <p class="text-gray-400 mt-2">Ingrese sus credenciales</p>
+        </header>
+
+        <form action="/login" method="POST" class="space-y-6">
+            <div>
+                <label class="block text-sm mb-2 text-gray-400">Usuario</label>
+                <input type="text" name="username" required class="w-full neumorphic-input p-3 rounded-lg text-color">
+            </div>
+            <div>
+                <label class="block text-sm mb-2 text-gray-400">Contraseña</label>
+                <input type="password" name="password" required class="w-full neumorphic-input p-3 rounded-lg text-color">
+            </div>
+            <% if (typeof error !== 'undefined') { %>
+                <p class="text-red-500 text-sm text-center"><%= error %></p>
+            <% } %>
+            <button type="submit" class="w-full neumorphic-button text-black font-bold py-3 rounded-xl mt-4" style="background-color: var(--primary-color);">
+                Entrar
+            </button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Junior Comida Rapida by: MJFOOD</title>
+    
+    <meta name="description" content="La mejor comida rápida y combos para disfrutar desde casa con envío rápido.">
+    <meta name="theme-color" content="#edebe4">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp">
+    
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    
+    <meta property="og:title" content="Junior Comida Rapida by: MJFOOD">
+    <meta property="og:description" content="Las mejor comida rápida y combos para disfrutar desde casa.">
+    <meta property="og:image" content="">
+    <meta property="og:type" content="Restaurant">
+    <meta property="og:locale" content="es_ES">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+          --text-color: #e0e1e5;
+          --primary-color: #0cf106;
+          --bg-color: #17171b;
+          --light-shadow: #262222;
+          --dark-shadow: #000000;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .text-color {
+          color: var(--text-color);
+        }
+        .neumorphic-flat {
+            background: var(--bg-color);
+            box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow);
+        }
+        .neumorphic-pressed {
+            background: var(--bg-color);
+            box-shadow: inset 7px 7px 15px var(--dark-shadow), inset -7px -7px 15px var(--light-shadow);
+        }
+        .neumorphic-input {
+            background: var(--bg-color);
+            box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
+            border: none;
+            outline: none;
+        }
+        .neumorphic-button {
+            background: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+            transition: all 0.2s ease-in-out;
+        }
+        .neumorphic-button:hover:not(:disabled) {
+            box-shadow: 3px 3px 7px var(--dark-shadow), -3px -3px 7px var(--light-shadow);
+        }
+        .neumorphic-button:active:not(:disabled) {
+            box-shadow: inset 3px 3px 7px var(--dark-shadow), inset -3px -3px 7px var(--light-shadow);
+        }
+        .neumorphic-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .accent-text { color: var(--primary-color); }
+        .error-text { color: #ff3131; }
+        .cart-badge {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background-color: var(--primary-color);
+          color: black;
+          font-size: 0.8rem;
+          font-weight: bold;
+        }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75);
+            z-index: 100; opacity: 0; transition: opacity 0.3s ease-in-out; pointer-events: none;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); z-index: 101;
+            max-height: 90vh; overflow-y: auto; opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; pointer-events: none;
+        }
+        .modal-content.active { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        .payment-details { display: none; }
+        .category-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+        .category-accordion.active .category-content {
+            max-height: 5000px;
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
+        .category-accordion .chevron-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .category-accordion.active .chevron-icon {
+            transform: rotate(180deg);
+        }
+        .status-indicator {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+        .status-open {
+            background-color: #39FF14;
+            color: #12350c;
+            box-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
+        }
+        .status-closed {
+            background-color: #FF3131;
+            color: #ffffff;
+            box-shadow: 0 0 5px #FF3131, 0 0 10px #FF3131;
+        }
+        .like-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 25px;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Estilos para Banners Profesionales */
+        .prompt-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(248,238,95,0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--light-shadow);
+            transform: translateY(150%);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .prompt-banner.active {
+            transform: translateY(0);
+        }
+        .prompt-glass {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        /* Estilos Toast Notification */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: rgba(23, 23, 27, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--light-shadow);
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 5px 5px 15px var(--dark-shadow);
+            display: flex;
+            items-center: center;
+            gap: 10px;
+            min-width: 250px;
+            max-width: 90vw;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+        .toast.active {
+            transform: translateX(0);
+        }
+        .toast-icon {
+            flex-shrink: 0;
+        }
+        .toast-message {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="fixed top-4 right-4 z-50">
+        <button id="cart-button" class="neumorphic-button p-4 rounded-full relative">
+            <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+            <span id="cart-badge" class="cart-badge hidden flex items-center justify-center"></span>
+        </button>
+    </div>
+
+    <section class="container mx-auto p-4 mt-2">
+        <div class="neumorphic-flat rounded-2xl overflow-hidden">
+            <div class="relative h-48 md:h-64 bg-neutral-800">
+                <img id="restaurant-banner" src="https://raw.githubusercontent.com/DrkBotBase/delivery/refs/heads/master/public/assets/images/menu_banner.png" alt="MJFOOD" class="w-full h-full object-cover opacity-90">
+                <!--
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                <div class="absolute bottom-4 left-6">
+                    <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight">MJFOOD</h1>
+                    <p class="text-xs md:text-sm text-gray-300 font-medium">Comida rápida de calidad</p>
+                </div>-->
+            </div>
+            <div class="p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <i data-lucide="map-pin" class="w-5 h-5 accent-text"></i>
+                            <p id="restaurant-address" class="text-color font-semibold"></p>
+                        </div>
+                    </div>
+                    <div id="status-indicator" class="status-indicator">Cargando...</div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-[var(--light-shadow)] flex flex-col sm:flex-row justify-between items-center text-sm gap-2">
+                    <div id="current-date" class="font-semibold text-color"></div>
+                    <button id="hours-button" class="underline hover:text-white transition">Ver Horarios de Atención</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container mx-auto p-4">
+        <div id="promotions-section" class="mb-8 hidden">
+            <h2 class="text-xl font-bold mb-4 uppercase tracking-wider accent-text">Promociones del Día</h2>
+            <div id="promotions-container" class="flex gap-4 overflow-x-auto pb-4 snap-x">
+            </div>
+        </div>
+
+        <!-- 
+        <h2 class="text-xl font-bold mb-4 uppercase tracking-wider accent-text">Categorías</h2>
+        -->
+        <div id="menu-container" class="space-y-6"></div>
+    </main>
+    
+    <footer id="contact" class="pt-10 pb-8">
+        <div class="container mx-auto px-6 text-center">
+            <div class="mt-12 border-t border-[var(--light-shadow)] pt-8 text-color">
+                <p>&copy; 2026 MJFOOD. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- MODALES -->
+    
+    <div id="item-modal-overlay" class="modal-overlay"></div>
+    <div id="item-modal" class="modal-content neumorphic-flat rounded-2xl w-11/12 max-w-md">
+        <div class="p-6 border-b border-[var(--dark-shadow)] flex justify-between items-center">
+            <h3 id="item-modal-title" class="text-2xl font-bold accent-text"></h3>
+            <button id="close-item-modal-btn" class="neumorphic-button p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-6">
+            <p id="item-modal-desc" class="text-color text-sm leading-relaxed mb-4"></p>
+            <div class="mt-4">
+                <label class="font-semibold mb-2 block text-sm">¿Cómo lo quieres?</label>
+                <textarea id="item-modal-instructions" class="w-full neumorphic-input rounded-lg p-3 h-20 text-sm text-color" placeholder="Instrucciones opcionales..."></textarea>
+            </div>
+            <div class="flex items-center justify-between mt-6 pt-4 border-t border-[var(--light-shadow)]">
+                <div class="flex items-center gap-2">
+                    <button id="item-decrease-qty" class="neumorphic-button w-10 h-10 rounded-lg font-bold text-xl">-</button>
+                    <span id="item-modal-qty" class="font-bold text-xl w-12 text-center text-color">1</span>
+                    <button id="item-increase-qty" class="neumorphic-button w-10 h-10 rounded-lg font-bold text-xl">+</button>
+                </div>
+                <button id="add-item-to-cart-btn" class="neumorphic-button text-black font-bold py-3 px-6 rounded-xl transition ml-2" style="background-color: var(--primary-color);">
+                    Añadir por <span id="item-modal-price">$0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-modal-overlay" class="modal-overlay"></div>
+    <div id="cart-modal" class="modal-content neumorphic-flat rounded-2xl w-11/12 md:max-w-2xl">
+        <div class="p-6 border-b border-[var(--dark-shadow)] flex justify-between items-center">
+            <h3 class="text-2xl font-bold flex items-center gap-2"><i data-lucide="shopping-bag" class="accent-text"></i> Tu Pedido</h3>
+            <button id="close-cart-btn" class="neumorphic-button p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        
+        <div id="cart-items" class="p-6 space-y-4 max-h-60 overflow-y-auto">
+            <p id="empty-cart-msg" class="text-center text-color">Tu carrito está vacío.</p>
+        </div>
+
+        <div id="cart-form-section" class="p-6 border-t border-[var(--dark-shadow)] hidden">
+            <h4 class="text-lg font-bold mb-4 accent-text">Datos para el Domicilio</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="client-name" placeholder="Nombre *" class="neumorphic-input p-3 rounded-lg text-sm text-color">
+                <input type="tel" id="client-phone" placeholder="Teléfono *" class="neumorphic-input p-3 rounded-lg text-sm text-color">
+                <input type="text" id="client-address" placeholder="Dirección de entrega *" class="neumorphic-input p-3 rounded-lg text-sm text-color md:col-span-2">
+                <select id="shipping-zone" class="neumorphic-input p-3 rounded-lg text-sm text-color md:col-span-2"></select>
+                
+                <div class="md:col-span-2">
+                    <h5 class="font-semibold mb-2 text-sm">Forma de Pago *</h5>
+                    <div class="flex gap-6 mt-1">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm">
+                            <input type="radio" name="payment" value="efectivo" class="accent-lime-500 w-4 h-4"> Efectivo
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm">
+                            <input type="radio" name="payment" value="transferencia" class="accent-lime-500 w-4 h-4"> Transferencia
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="efectivo-details" class="payment-details md:col-span-2">
+                    <input type="number" id="payment-cash-amount" placeholder="¿Con cuánto pagas? (Para llevarte cambio)" class="w-full neumorphic-input p-3 rounded-lg text-sm text-color">
+                </div>
+                <div id="transferencia-details" class="payment-details md:col-span-2 neumorphic-pressed p-4 rounded-lg text-xs leading-relaxed text-gray-300"></div>
+                
+                <textarea id="order-comments" class="md:col-span-2 neumorphic-input rounded-lg p-3 h-20 text-sm text-color" placeholder="Ej: Tocar timbre, llamar..."></textarea>
+            </div>
+            <div id="form-error-msg" class="error-text text-sm mt-4 text-center font-bold"></div>
+        </div>
+        
+        <div id="cart-summary" class="p-6 border-t border-[var(--dark-shadow)] space-y-2 hidden rounded-b-2xl">
+            <div class="flex justify-between text-sm"><span>Subtotal Productos</span><span id="cart-subtotal" class="font-semibold">$0</span></div>
+            <div class="flex justify-between text-sm text-gray-400"><span>Domicilio Fijo</span><span id="cart-shipping" class="font-semibold">$0</span></div>
+            <div class="flex justify-between text-xl font-bold border-t border-[var(--light-shadow)] pt-2 mt-2"><span>Total a Pagar</span><span id="cart-total" class="accent-text">$0</span></div>
+            <button id="confirm-order-btn" class="w-full mt-4 neumorphic-button text-black font-black py-4 px-6 rounded-xl text-lg hover:brightness-110 active:scale-95 transition" style="background-color: var(--primary-color);">Enviar Pedido por WhatsApp</button>
+        </div>
+    </div>
+
+    <div id="success-modal-overlay" class="modal-overlay"></div>
+    <div id="success-modal" class="modal-content neumorphic-flat rounded-2xl w-11/12 max-w-sm p-8 text-center">
+        <div class="flex justify-center mb-4">
+            <div class="neumorphic-pressed w-20 h-20 rounded-full flex items-center justify-center">
+                <i data-lucide="check-circle" class="w-12 h-12 accent-text animate-bounce"></i>
+            </div>
+        </div>
+        <h3 class="text-2xl font-bold mb-2 text-color">¡Pedido Registrado!</h3>
+        <p class="text-color text-sm mb-6">Tu pedido se ha guardado y serás redirigido a WhatsApp para confirmar con el repartidor.</p>
+        <button id="close-success-btn" class="w-full neumorphic-button text-black font-bold py-3 px-6 rounded-xl" style="background-color: var(--primary-color);">Aceptar</button>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="hours-modal-overlay" class="modal-overlay"></div>
+    <div id="hours-modal" class="modal-content neumorphic-flat rounded-2xl w-11/12 max-w-sm">
+        <div class="p-6 border-b border-[var(--dark-shadow)] flex justify-between items-center">
+            <h3 class="text-2xl font-bold accent-text">Horarios de Atención</h3>
+            <button id="close-hours-btn" class="neumorphic-button p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="hours-list" class="p-6 space-y-3 text-sm"></div>
+    </div>
+
+    <button id="likeBtn" class="like-btn flex items-center gap-2 px-4 py-3 rounded-full neumorphic-button text-gray-400 transition" onclick="handleLike(event)">
+      <i class="fa-solid fa-star text-amber-400"></i>
+      <span id="likeCount" class="text-color font-bold"><%= likes %></span>
+    </button>
+    
+   <div id="pwa-install-banner" class="prompt-banner rounded-2xl p-5 neumorphic-flat hidden">
+       <div class="flex items-center gap-4">
+           <div class="w-12 h-12 rounded-xl neumorphic-pressed flex items-center justify-center flex-shrink-0">
+               <i data-lucide="download" class="w-6 h-6 accent-text"></i>
+           </div>
+           <div class="flex-grow">
+               <h4 class="font-bold text-sm text-color">Instalar App</h4>
+               <p class="text-[11px] text-color">Accede más rápido y pide sin internet.</p>
+           </div>
+           <div class="flex gap-2">
+               <button id="pwa-install-btn" class="neumorphic-button px-4 py-2 rounded-lg text-xs font-bold" style="background-color: var(--primary-color); color: black;">Instalar</button>
+               <button id="pwa-dismiss-btn" class="neumorphic-button px-3 py-2 rounded-lg text-xs text-gray-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+           </div>
+       </div>
+   </div>
+
+   <div id="notif-subscribe-banner" class="prompt-banner rounded-2xl p-5 neumorphic-flat hidden">
+       <div class="flex items-center gap-4">
+           <div class="w-12 h-12 rounded-xl neumorphic-pressed flex items-center justify-center flex-shrink-0">
+               <i data-lucide="bell" class="w-6 h-6 accent-text"></i>
+           </div>
+           <div class="flex-grow">
+               <h4 class="font-bold text-sm text-color">Notificaciones</h4>
+               <p class="text-[11px] text-color">Recibe nuestras mejores ofertas al instante.</p>
+           </div>
+           <div class="flex gap-2">
+               <button id="notif-subscribe-btn" class="neumorphic-button px-4 py-2 rounded-lg text-xs font-bold" style="background-color: var(--primary-color); color: black;">Activar</button>
+               <button id="notif-dismiss-btn" class="neumorphic-button px-3 py-2 rounded-lg text-xs text-gray-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+           </div>
+       </div>
+   </div>
+
+   <script>
+
+        window.dbPromotions = <%- JSON.stringify(dbPromotions) %>;
+        window.restaurantData = <%- JSON.stringify(restaurantData) %>;
+        const VAPID_PUBLIC_KEY = '<%= vapidPublicKey %>';
+        
+        let cart = [];
+        let currentItem = null;
+        let isOpen = false;
+        
+        function applyTaxRate(price, shouldApplyTax) {
+            return price;
+        }
+
+        const menuContainer = document.getElementById('menu-container');
+        const modals = { 
+            item: { overlay: document.getElementById('item-modal-overlay'), content: document.getElementById('item-modal') }, 
+            cart: { overlay: document.getElementById('cart-modal-overlay'), content: document.getElementById('cart-modal') }, 
+            success: { overlay: document.getElementById('success-modal-overlay'), content: document.getElementById('success-modal') }, 
+            hours: { overlay: document.getElementById('hours-modal-overlay'), content: document.getElementById('hours-modal') }
+        };
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast neumorphic-flat`;
+            
+            let icon = 'info';
+            let color = 'text-color';
+            toast.style.background = '#fecb15';
+            
+            if (type === 'success') {
+                icon = 'check-circle';
+                toast.style.background = '#02f664';
+            } else if (type === 'error') {
+                icon = 'alert-circle';
+                toast.style.background = '#ff3131';
+            }
+
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i data-lucide="${icon}" class="w-5 h-5 text-color"></i>
+                </div>
+                <div class="toast-message text-color">${message}</div>
+            `;
+
+            container.appendChild(toast);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            setTimeout(() => toast.classList.add('active'), 10);
+
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        const itemModal = { 
+            title: document.getElementById('item-modal-title'), 
+            desc: document.getElementById('item-modal-desc'), 
+            instructions: document.getElementById('item-modal-instructions'), 
+            qty: document.getElementById('item-modal-qty'), 
+            price: document.getElementById('item-modal-price'), 
+            addBtn: document.getElementById('add-item-to-cart-btn') 
+        };
+        const cartModal = { 
+            itemsContainer: document.getElementById('cart-items'), 
+            summary: document.getElementById('cart-summary'), 
+            form: document.getElementById('cart-form-section'), 
+            badge: document.getElementById('cart-badge'), 
+            subtotal: document.getElementById('cart-subtotal'), 
+            shipping: document.getElementById('cart-shipping'), 
+            total: document.getElementById('cart-total'), 
+            formError: document.getElementById('form-error-msg'), 
+            shippingZoneSelect: document.getElementById('shipping-zone'), 
+            confirmBtn: document.getElementById('confirm-order-btn') 
+        };
+        
+        function getCurrentZoneInfo() {
+            const select = cartModal.shippingZoneSelect;
+            const selectedIndex = select.selectedIndex;
+            if (selectedIndex <= 0) {
+                return { name: '', price: 0 };
+            }
+            const selectedOption = select.options[selectedIndex];
+            return {
+                name: selectedOption.dataset.name || '',
+                price: parseFloat(selectedOption.value) || 0
+            };
+        }
+        
+        function calculateShippingCost() {
+            const zoneInfo = getCurrentZoneInfo();
+            return zoneInfo.price;
+        }
+        
+        function initializeApp(data) {
+            const root = document.documentElement;
+            if (data.config.color) {
+                if (data.config.color.text) root.style.setProperty('--text-color', data.config.color.text);
+                if (data.config.color.primary) root.style.setProperty('--primary-color', data.config.color.primary);
+                if (data.config.color.bg) root.style.setProperty('--bg-color', data.config.color.bg);
+                if (data.config.color.light) root.style.setProperty('--light-shadow', data.config.color.light);
+                if (data.config.color.dark) root.style.setProperty('--dark-shadow', data.config.color.dark);
+            }
+
+            document.title = `${data.config.nombre}`;
+            
+            const addressElement = document.getElementById('restaurant-address');
+            addressElement.textContent = data.config.direccion;
+            
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        
+            const banner = document.getElementById('restaurant-banner');
+            banner.src = data.config.logoUrl || '';
+            banner.alt = `${data.config.nombre}`;
+            
+            const transferDetails = document.getElementById('transferencia-details');
+            const p = data.paymentInfo.transfer;
+            transferDetails.innerHTML = `<p class="font-bold text-white mb-1">Datos de Transferencia:</p><p class="text-gray-300">Banco/Plataforma: ${p.bankName}</p><p class="text-gray-300">Tipo: ${p.accountType}</p><p class="text-gray-300">Número celular: <strong>${p.accountNumber}</strong></p><p class="text-gray-300">Titular: ${p.accountHolder}</p>`;
+            
+            checkRestaurantStatus();
+            displayCurrentDate();
+            
+            data.menu.forEach(cat => {
+                cat.items.sort((a, b) => a.id - b.id);
+            });
+
+            renderPromotions();
+            renderMenu();
+            populateShippingZones();
+            populateHoursModal();
+            loadClientData();
+            setInterval(checkRestaurantStatus, 60000);
+        }
+
+        function renderPromotions() {
+            const container = document.getElementById('promotions-container');
+            const section = document.getElementById('promotions-section');
+            
+            const staticPromos = window.restaurantData.promotions || [];
+            const dbPromos = window.dbPromotions || [];
+
+            if (staticPromos.length === 0 && dbPromos.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            container.innerHTML = '';
+
+            staticPromos.forEach(promo => {
+                const item = window.restaurantData.menu
+                    .flatMap(cat => cat.items)
+                    .find(i => i.id === promo.itemId);
+
+                if (item) {
+                    renderPromoCard(item, promo.image, container);
+                }
+            });
+
+            dbPromos.forEach(promo => {
+                let item;
+                if (promo.itemId) {
+                    item = window.restaurantData.menu
+                        .flatMap(cat => cat.items)
+                        .find(i => i.id === promo.itemId);
+                } else {
+                    item = {
+                        id: promo._id,
+                        name: promo.name,
+                        description: promo.description,
+                        basePrice: promo.basePrice,
+                        image: promo.image,
+                        kitchenGuide: `PROMO: ${promo.name}`
+                    };
+                }
+
+                if (item) {
+                    renderPromoCard(item, promo.image, container);
+                }
+            });
+        }
+
+        function renderPromoCard(item, imageUrl, container) {
+            const promoEl = document.createElement('div');
+            promoEl.className = 'flex-shrink-0 w-64 h-40 md:w-80 md:h-48 rounded-2xl overflow-hidden snap-start cursor-pointer neumorphic-flat relative group';
+            promoEl.innerHTML = `
+                <img src="${imageUrl}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
+                    <h3 class="text-color font-bold text-sm md:text-base line-clamp-1">${item.name}</h3>
+                    <p class="accent-text font-black text-lg">$${item.basePrice.toLocaleString()}</p>
+                </div>
+            `;
+            promoEl.onclick = () => openItemModal(item);
+            container.appendChild(promoEl);
+        }
+
+        function checkRestaurantStatus() {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const currentTime = now.getHours() * 100 + now.getMinutes();
+            const todaysSchedule = window.restaurantData.schedule.find(s => s.day === dayOfWeek);
+            let checkIsOpen = false;
+            
+            if (todaysSchedule && todaysSchedule.open === '24h') {
+                checkIsOpen = true;
+            } 
+            else if (todaysSchedule && todaysSchedule.open !== 'closed') {
+                const openTime = parseInt(todaysSchedule.open.replace(':', ''));
+                const closeTime = parseInt(todaysSchedule.close.replace(':', ''));
+                if (closeTime < openTime) {
+                    if (currentTime >= openTime || currentTime < closeTime) checkIsOpen = true;
+                } else {
+                    if (currentTime >= openTime && currentTime < closeTime) checkIsOpen = true;
+                }
+            }
+            
+            const yesterday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+            const yesterdaySchedule = window.restaurantData.schedule.find(s => s.day === yesterday);
+            if (yesterdaySchedule && yesterdaySchedule.open === '24h') {
+                checkIsOpen = true;
+            }
+            else if (yesterdaySchedule && yesterdaySchedule.open !== 'closed') {
+                const openTime = parseInt(yesterdaySchedule.open.replace(':', ''));
+                const closeTime = parseInt(yesterdaySchedule.close.replace(':', ''));
+                if (closeTime < openTime && currentTime < closeTime) checkIsOpen = true;
+            }
+            
+            isOpen = checkIsOpen;
+            updateStatusUI();
+        }
+        
+        function updateStatusUI() {
+            const statusDiv = document.getElementById('status-indicator');
+            if (isOpen) {
+                statusDiv.textContent = 'Abierto'; statusDiv.className = 'status-indicator status-open';
+                cartModal.confirmBtn.disabled = false; cartModal.confirmBtn.textContent = 'Enviar Pedido por WhatsApp';
+            } else {
+                statusDiv.textContent = 'Cerrado'; statusDiv.className = 'status-indicator status-closed';
+                cartModal.confirmBtn.disabled = true; cartModal.confirmBtn.textContent = 'Cerrado por el momento';
+            }
+            document.querySelectorAll('.select-item-btn').forEach(btn => { btn.style.display = isOpen ? 'block' : 'none'; });
+        }
+        
+        function displayCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES', options);
+        }
+        
+        function populateHoursModal() {
+          const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+          const hoursList = document.getElementById('hours-list'); 
+          hoursList.innerHTML = '';
+          
+          days.forEach((day, index) => {
+              const schedule = window.restaurantData.schedule.find(s => s.day === index);
+              
+              let hoursText;
+              if (schedule && schedule.open === '24h') {
+                  hoursText = 'Abierto 24 horas';
+              } else if (schedule && schedule.open !== 'closed') {
+                  hoursText = `${schedule.open} - ${schedule.close}`;
+              } else {
+                  hoursText = 'Cerrado';
+              }
+              
+              const dayEl = document.createElement('div');
+              dayEl.className = 'flex justify-between items-center py-1 border-b border-[var(--light-shadow)]';
+              dayEl.innerHTML = `<span class="font-semibold text-color">${day}</span><span class="text-color">${hoursText}</span>`;
+              hoursList.appendChild(dayEl);
+          });
+      }
+      
+        function toggleModal(modalKey, forceOpen = null) {
+            const modal = modals[modalKey]; if (!modal) return;
+            const action = forceOpen === null ? !modal.content.classList.contains('active') : forceOpen;
+            modal.content.classList.toggle('active', action);
+            modal.overlay.classList.toggle('active', action);
+        }
+        
+        function calculateItemPrice() {
+            if (!currentItem) return 0;
+            let total = currentItem.basePrice;
+            const quantity = parseInt(itemModal.qty.textContent);
+            itemModal.price.textContent = `$${(total * quantity).toLocaleString()}`;
+            return total;
+        }
+        
+        function openItemModal(item) {
+            currentItem = item; 
+            itemModal.title.textContent = item.name;
+            itemModal.desc.textContent = item.description; 
+            itemModal.instructions.value = ''; 
+            itemModal.qty.textContent = '1';
+            calculateItemPrice();
+            toggleModal('item', true);
+        }
+        
+        function addToCart() {
+            if (!currentItem) return;
+            
+            const price = calculateItemPrice();
+            const quantity = parseInt(itemModal.qty.textContent);
+            const instructions = itemModal.instructions.value.trim();
+            
+            const existingItem = cart.find(item =>
+                item.id === currentItem.id &&
+                item.instructions === instructions
+            );
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: currentItem.id,
+                    cartId: Date.now(),
+                    name: currentItem.name,
+                    price: price,
+                    quantity: quantity,
+                    instructions: instructions,
+                    kitchenGuide: currentItem.kitchenGuide || `${currentItem.name} (Eje del local)`
+                });
+            }
+            
+            renderCart();
+            toggleModal('item', false);
+        }
+        
+        function renderCart() {
+            const formatCOP = value => `$${Intl.NumberFormat('es-CO').format(value)}`;
+        
+            cartModal.itemsContainer.innerHTML = '';
+            if (cart.length === 0) {
+                cartModal.itemsContainer.innerHTML = '<p id="empty-cart-msg" class="text-center text-color py-4">Tu carrito está vacío.</p>';
+                cartModal.summary.classList.add('hidden');
+                cartModal.form.classList.add('hidden');
+                cartModal.badge.classList.add('hidden');
+                return;
+            }
+        
+            cartModal.summary.classList.remove('hidden');
+            cartModal.form.classList.remove('hidden');
+        
+            cart.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex justify-between items-center py-3 border-b border-[var(--light-shadow)]';
+        
+                const totalItem = item.price * item.quantity;
+        
+                itemEl.innerHTML = `
+                    <div class="max-w-[80%]">
+                        <p class="font-bold text-color text-sm md:text-base">${item.quantity} x ${item.name}</p>
+                        ${item.instructions ? `<p class="text-xs text-color italic mt-0.5">Nota: "${item.instructions}"</p>` : ''}
+                        <p class="text-sm font-semibold accent-text mt-1">${formatCOP(totalItem)}</p>
+                    </div>
+                    <button class="remove-btn neumorphic-button p-2.5 rounded-lg text-red-400 hover:text-red-300" data-cart-id="${item.cartId}">
+                        <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                    </button>
+                `;
+                cartModal.itemsContainer.appendChild(itemEl);
+            });
+        
+            lucide.createIcons();
+            updateCartSummary();
+        }
+        
+        function updateCartSummary() {
+            const formatCOP = value => `$${Intl.NumberFormat('es-CO').format(value)}`;
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            const shippingCost = calculateShippingCost();
+            const total = subtotal + shippingCost;
+            
+            cartModal.subtotal.textContent = formatCOP(subtotal);
+            cartModal.shipping.textContent = formatCOP(shippingCost);
+            cartModal.total.textContent = formatCOP(total);
+            cartModal.badge.textContent = totalItems;
+            cartModal.badge.classList.toggle('hidden', totalItems === 0);
+        }
+        
+        function validateCartForm() {
+            const name = document.getElementById('client-name').value.trim();
+            const address = document.getElementById('client-address').value.trim();
+            const phone = document.getElementById('client-phone').value.trim();
+            const paymentMethod = document.querySelector('input[name="payment"]:checked');
+            const zonaSeleccionada = cartModal.shippingZoneSelect.value !== "";
+            
+            cartModal.formError.textContent = '';
+            if (!name || !address || !phone || !paymentMethod || !zonaSeleccionada) {
+                cartModal.formError.textContent = '¡Faltan datos obligatorios! Por favor llena los marcados con asterisco (*).'; 
+                return false;
+            } 
+            return true;
+        }
+        
+        function renderMenu() {
+            menuContainer.innerHTML = '';
+            
+            window.restaurantData.menu.forEach((cat, index) => {
+                const isFirst = index === 0;
+                const accordionClass = isFirst ? 
+                    'category-accordion neumorphic-flat rounded-2xl active' : 
+                    'category-accordion neumorphic-flat rounded-2xl';
+                
+                const accordion = document.createElement('div');
+                accordion.className = accordionClass;
+                accordion.innerHTML = `
+                    <button class="category-header w-full p-6 flex justify-between items-center text-left focus:outline-none">
+                        <h2 class="text-xl md:text-2xl font-black tracking-tight text-color">${cat.category}</h2>
+                        <i data-lucide="chevron-down" class="chevron-icon w-6 h-6 text-color"></i>
+                    </button>
+                    <div class="category-content">
+                        <div class="space-y-4">
+                        ${cat.items.map(item => {
+                            const displayPrice = item.basePrice;
+                            return `
+                                <div class="neumorphic-pressed rounded-2xl p-4 flex items-center gap-4 hover:border hover:border-lime-500/20 transition-all">
+                                  <!--<img src="${item.image || window.restaurantData.config.logoUrl || '/assets/banner.jpg'}" alt="${item.name}" class="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg flex-shrink-0">-->
+                                    <div class="flex-grow">
+                                        <h3 class="text-base md:text-lg font-bold text-color">${item.name}</h3>
+                                        <p class="text-xs text-gray-400 my-1 leading-relaxed">${item.description}</p>
+                                        <p class="text-md md:text-lg font-black accent-text mt-2">$${displayPrice.toLocaleString()}</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <button class="select-item-btn neumorphic-button text-black font-bold p-3 rounded-xl hover:scale-105 active:scale-95 transition flex items-center justify-center" style="background-color: var(--primary-color);" data-id="${item.id}">
+                                            <i data-lucide="plus" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                        </div>
+                    </div>
+                `;
+                menuContainer.appendChild(accordion);
+            });
+            lucide.createIcons();
+            updateStatusUI();
+        }
+        
+        function populateShippingZones() {
+            cartModal.shippingZoneSelect.innerHTML = `<option value="" disabled selected>¿Dónde te lo llevamos? *</option>`;
+            window.restaurantData.shippingZones.forEach(zone => {
+                const option = document.createElement('option');
+                option.value = zone.price;
+                option.textContent = `${zone.name} (+$${zone.price.toLocaleString()} COP)`;
+                option.dataset.name = zone.name;
+                option.dataset.price = zone.price;
+                cartModal.shippingZoneSelect.appendChild(option);
+            });
+        }
+        
+        function loadClientData() {
+            const savedData = localStorage.getItem('clientInfo');
+            if(savedData) {
+                const client = JSON.parse(savedData);
+                document.getElementById('client-name').value = client.name || '';
+                document.getElementById('client-phone').value = client.phone || '';
+                document.getElementById('client-address').value = client.address || '';
+            }
+        }
+        
+        function saveClientData() {
+            const clientInfo = { 
+                name: document.getElementById('client-name').value.trim(), 
+                phone: document.getElementById('client-phone').value.trim(), 
+                address: document.getElementById('client-address').value.trim() 
+            };
+            localStorage.setItem('clientInfo', JSON.stringify(clientInfo));
+        }
+        
+        function sendOrderViaWhatsApp() {
+          const clientName = document.getElementById('client-name').value.trim();  
+          const clientPhone = document.getElementById('client-phone').value.trim();  
+          const clientAddress = document.getElementById('client-address').value.trim();  
+          const paymentMethod = document.querySelector('input[name="payment"]:checked').value;  
+          const cashAmount = document.getElementById('payment-cash-amount').value.trim();  
+          const comments = document.getElementById('order-comments').value.trim();  
+          
+          const zoneInfo = getCurrentZoneInfo();
+          const shippingCost = calculateShippingCost();
+          const shippingZoneName = zoneInfo.name;
+          const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);  
+          const total = subtotal + shippingCost;  
+      
+          let message = `📦 *NUEVO PEDIDO - ${window.restaurantData.config.nombre}* \n\n`;
+          message += `👤 *Cliente:* ${clientName}\n📞 *Teléfono:* ${clientPhone}\n🏠 *Dirección:* ${clientAddress}\n`;
+          message += `🚚 *Zona:* ${shippingZoneName} ($${shippingCost.toLocaleString()} COP)\n\n`;
+      
+          message += `🧾 *DETALLE DEL PEDIDO:*\n`;
+          cart.forEach((item, i) => {
+            message += `${i + 1}. *${item.name}* (x${item.quantity}) - $${(item.price * item.quantity).toLocaleString()}\n`;
+            if (item.instructions && item.instructions.trim() !== '') {
+              message += `   _Nota: "${item.instructions}"_\n`;
+            }
+          });
+      
+          message += `\n💰 *Subtotal:* $${subtotal.toLocaleString()}\n`;
+          message += `🚕 *Domicilio Fijo:* $${shippingCost.toLocaleString()}\n`;
+          message += `💵 *Total a pagar:* *$${total.toLocaleString()}*\n`;
+          message += `💳 *Método de pago:* ${paymentMethod.toUpperCase()}\n`;
+      
+          if (paymentMethod === 'efectivo' && cashAmount) {
+              message += `💸 *Paga con:* $${parseInt(cashAmount).toLocaleString()} (Llevar cambio)\n`;
+          }
+      
+          if (comments) {
+              message += `\n🗒️ *Notas adicionales:* ${comments}\n`;
+          }
+          
+          // BLOQUE 2: GUÍA DE PREPARACIÓN DE COCINA PARA MARCIO (HACK DE MENÚ)
+          /*message += `\n─────────────────────\n`;
+          message += `🚨 *INSTRUCCIONES PARA LA COCINA:* \n`;
+          cart.forEach((item) => {
+              message += `• *Preparar:* ${item.quantity}x _${item.kitchenGuide}_\n`;
+              if (item.instructions && item.instructions.trim() !== '') {
+                  message += `  (Nota cocina: "${item.instructions}")\n`;
+              }
+          });*/
+          
+          message += `\n🕒 _Pedido generado desde el portal digital de MJFOOD_`;
+      
+          const restaurantPhone = window.restaurantData.config.telefonoWhatsApp;
+          const whatsappUrl = `https://api.whatsapp.com/send?phone=${restaurantPhone}&text=${encodeURIComponent(message)}`;
+          window.open(whatsappUrl, '_blank');
+        }
+        
+        const RESTAURANTE_ID = window.restaurantData.config.extension;
+        async function handleLike(event) {
+          event.preventDefault();
+          const btn = document.getElementById('likeBtn');
+          const count = document.getElementById('likeCount');
+          
+          if (localStorage.getItem('hasLiked_' + RESTAURANTE_ID)) {
+              showToast('¡Ya has calificado este restaurante!');
+              return;
+          }
+
+          try {
+            const response = await fetch('/api/like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                count.innerText = data.count;
+                btn.classList.add('text-lime-400');
+                localStorage.setItem('hasLiked_' + RESTAURANTE_ID, 'true');
+            } else {
+                showToast(data.message || 'Error al procesar el like', 'error');
+                if (data.message.includes('Ya has dado like')) {
+                    localStorage.setItem('hasLiked_' + RESTAURANTE_ID, 'true');
+                    btn.classList.add('text-lime-400');
+                }
+            }
+          } catch (error) {
+            console.error('Error updating like:', error);
+          }
+        }
+        
+        function checkLikeStatus() {
+            if (localStorage.getItem('hasLiked_' + RESTAURANTE_ID)) {
+                document.getElementById('likeBtn').classList.add('text-lime-400');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp(restaurantData);
+            checkLikeStatus();
+            checkNotificationPrompt();
+            
+            cartModal.shippingZoneSelect.addEventListener('change', () => {
+                updateCartSummary();
+            });
+            
+            document.body.addEventListener('click', async e => {
+                const header = e.target.closest('.category-header');
+                if (header) {
+                    const clickedAccordion = header.parentElement;
+                    const wasActive = clickedAccordion.classList.contains('active');
+                    
+                    document
+                        .querySelectorAll('.category-accordion')
+                        .forEach(acc => acc.classList.remove('active'));
+
+                    if (!wasActive) clickedAccordion.classList.add('active');
+                }
+
+                const selectBtn = e.target.closest('.select-item-btn');
+                if (selectBtn) {
+                    const itemId = parseInt(selectBtn.dataset.id);
+                    const item = window.restaurantData.menu
+                        .flatMap(cat => cat.items)
+                        .find(i => i.id === itemId);
+
+                    if (item) openItemModal(item);
+                }
+            });
+
+            cartModal.confirmBtn.addEventListener('click', async () => {
+              if (validateCartForm()) {
+                const orderData = {
+                    clientName: document.getElementById('client-name').value.trim(),
+                    clientPhone: document.getElementById('client-phone').value.trim(),
+                    clientAddress: document.getElementById('client-address').value.trim(),
+                    items: cart.map(item => ({
+                        name: item.name,
+                        quantity: item.quantity,
+                        price: item.price,
+                        instructions: item.instructions
+                    })),
+                    subtotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                    shippingCost: calculateShippingCost(),
+                    total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + calculateShippingCost(),
+                    paymentMethod: document.querySelector('input[name="payment"]:checked').value,
+                    cashAmount: document.getElementById('payment-cash-amount').value.trim() || 0,
+                    comments: document.getElementById('order-comments').value.trim()
+                };
+
+                try {
+                    const response = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+                    
+                    if (response.ok) {
+                        saveClientData();
+                        sendOrderViaWhatsApp();
+                        toggleModal('cart', false);
+                        toggleModal('success', true);
+                        cart = [];
+                        renderCart();
+
+                        document.getElementById('order-comments').value = '';
+                        document.getElementById('payment-cash-amount').value = '';
+                        document.getElementById('efectivo-details').style.display = 'none';
+                        document.getElementById('transferencia-details').style.display = 'none';
+
+                        const checkedPayment = document.querySelector('input[name="payment"]:checked');
+                        if (checkedPayment) checkedPayment.checked = false;
+
+                        cartModal.shippingZoneSelect.value = "";
+                    } else {
+                        showToast('Error al guardar el pedido. Por favor intenta de nuevo.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error saving order:', error);
+                    showToast('Error de conexión. Por favor intenta de nuevo.');
+                }
+              }
+            });
+
+            document.getElementById('hours-button')
+                .addEventListener('click', () => toggleModal('hours', true));
+
+            document.getElementById('close-hours-btn')
+                .addEventListener('click', () => toggleModal('hours', false));
+
+            modals.hours.overlay
+                .addEventListener('click', () => toggleModal('hours', false));
+
+            document.getElementById('cart-button')
+                .addEventListener('click', () => {
+                    renderCart();
+                    toggleModal('cart', true);
+                });
+
+            modals.item.overlay
+                .addEventListener('click', () => toggleModal('item', false));
+
+            document.getElementById('close-item-modal-btn')
+                .addEventListener('click', () => toggleModal('item', false));
+
+            modals.cart.overlay
+                .addEventListener('click', () => toggleModal('cart', false));
+
+            document.getElementById('close-cart-btn')
+                .addEventListener('click', () => toggleModal('cart', false));
+
+            modals.success.overlay
+                .addEventListener('click', () => toggleModal('success', false));
+
+            document.getElementById('close-success-btn')
+                .addEventListener('click', () => toggleModal('success', false));
+
+            document.getElementById('item-decrease-qty')
+                .addEventListener('click', () => {
+                    let qty = parseInt(itemModal.qty.textContent);
+                    if (qty > 1) {
+                        itemModal.qty.textContent = qty - 1;
+                        calculateItemPrice();
+                    }
+                });
+
+            document.getElementById('item-increase-qty')
+                .addEventListener('click', () => {
+                    let qty = parseInt(itemModal.qty.textContent);
+                    itemModal.qty.textContent = qty + 1;
+                    calculateItemPrice();
+                });
+
+            itemModal.addBtn.addEventListener('click', addToCart);
+
+            cartModal.itemsContainer.addEventListener('click', e => {
+                const removeBtn = e.target.closest('.remove-btn');
+                if (removeBtn) {
+                    const cartId = parseInt(removeBtn.dataset.cartId);
+                    cart = cart.filter(item => item.cartId !== cartId);
+                    renderCart();
+                }
+            });
+
+            document.querySelectorAll('input[name="payment"]').forEach(radio => {
+                radio.addEventListener('change', e => {
+                    document.getElementById('efectivo-details').style.display =
+                        e.target.value === 'efectivo' ? 'block' : 'none';
+
+                    document.getElementById('transferencia-details').style.display =
+                        e.target.value === 'transferencia' ? 'block' : 'none';
+                });
+            });
+        });
+
+        // --- Banners ---
+        let deferredPrompt;
+        const pwaBanner = document.getElementById('pwa-install-banner');
+        const notifBanner = document.getElementById('notif-subscribe-banner');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!sessionStorage.getItem('pwa_dismissed')) {
+                setTimeout(() => {
+                    pwaBanner.classList.remove('hidden');
+                    setTimeout(() => pwaBanner.classList.add('active'), 100);
+                }, 3000);
+            }
+        });
+
+        document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    pwaBanner.classList.remove('active');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+            pwaBanner.classList.remove('active');
+            sessionStorage.setItem('pwa_dismissed', 'true');
+        });
+
+        async function checkNotificationPrompt() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                if (!sessionStorage.getItem('notif_dismissed')) {
+                    setTimeout(() => {
+                        notifBanner.classList.remove('hidden');
+                        setTimeout(() => notifBanner.classList.add('active'), 100);
+                    }, 4000);
+                }
+            }
+        }
+
+        document.getElementById('notif-subscribe-btn').addEventListener('click', async () => {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                notifBanner.classList.remove('active');
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(reg => subscribeUser(reg));
+                }
+            } else {
+                notifBanner.classList.remove('active');
+            }
+        });
+
+        document.getElementById('notif-dismiss-btn').addEventListener('click', () => {
+            notifBanner.classList.remove('active');
+            sessionStorage.setItem('notif_dismissed', 'true');
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        async function subscribeUser(registration) {
+            try {
+                const existingSubscription = await registration.pushManager.getSubscription();
+                if (existingSubscription) return;
+
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') return;
+
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+
+                await fetch('/api/notifications/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                });
+
+                console.log('User subscribed for push notifications');
+            } catch (error) {
+                console.error('Failed to subscribe user:', error);
+            }
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+    </script>
+</body>
+</html>

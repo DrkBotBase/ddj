@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - <%= restaurantInfo.config.nombre %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+          --bg-color: #edebe4;
+          --text-color: #1a1c21;
+          --primary-color: #e21c1b;
+          --light-shadow: #dbd7c5;
+          --dark-shadow: #cac7b5;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+        }
+        .neumorphic-flat {
+            background: var(--bg-color);
+            box-shadow: 7px 7px 15px var(--dark-shadow), -7px -7px 15px var(--light-shadow);
+        }
+        .neumorphic-input {
+            background: var(--bg-color);
+            box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
+            border: none;
+            outline: none;
+        }
+        .neumorphic-button {
+            background: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+            transition: all 0.2s ease;
+        }
+        .neumorphic-button:active {
+            box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
+            transform: scale(0.98);
+        }
+        .tab-btn.active {
+            color: var(--primary-color);
+            box-shadow: inset 3px 3px 6px var(--dark-shadow), inset -3px -3px 6px var(--light-shadow);
+        }
+        .hidden { display: none; }
+        /* Estilos Toast Notification */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: rgba(23, 23, 27, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--light-shadow);
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 5px 5px 15px var(--dark-shadow);
+            display: flex;
+            items-center: center;
+            gap: 10px;
+            min-width: 250px;
+            max-width: 90vw;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+        .toast.active {
+            transform: translateX(0);
+        }
+        .toast-icon {
+            flex-shrink: 0;
+        }
+        .toast-message {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-3xl font-bold" style="color: var(--primary-color);">Panel de Control</h1>
+            <div class="flex gap-4">
+                <a href="/logout" class="neumorphic-button px-4 py-2 rounded-lg text-sm text-red-500">Cerrar Sesión</a>
+                <a href="/" target="_blank" class="neumorphic-button px-4 py-2 rounded-lg text-sm">Ver Sitio Público</a>
+            </div>
+        </header>
+
+        <nav class="flex flex-wrap gap-2 mb-8">
+            <button onclick="showTab('home')" id="tab-home" class="tab-btn active neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="home"></i> Inicio
+            </button>
+            <button onclick="showTab('history')" id="tab-history" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="list"></i> Historial
+            </button>
+            <button onclick="showTab('config')" id="tab-config" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="settings"></i> Configuración
+            </button>
+            <button onclick="showTab('menu')" id="tab-menu" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="utensils"></i> Menú
+            </button>
+            <button onclick="showTab('promos')" id="tab-promos" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="sparkles"></i> Promociones
+            </button>
+            <button onclick="showTab('schedule')" id="tab-schedule" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="clock"></i> Horarios
+            </button>
+            <button onclick="showTab('shipping')" id="tab-shipping" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="truck"></i> Envíos
+            </button>
+            <button onclick="showTab('notifications')" id="tab-notifications" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="bell"></i> Notificaciones
+            </button>
+            <button onclick="showTab('clients')" id="tab-clients" class="tab-btn neumorphic-button px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                <i data-lucide="users"></i> Clientes
+            </button>
+        </nav>
+
+        <div id="content-home" class="tab-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Órdenes Pendientes</h2>
+                <div id="pending-count" class="bg-yellow-500 text-black px-3 py-1 rounded-full font-bold text-xs">0</div>
+            </div>
+            <div id="pending-orders-container" class="space-y-6">
+            </div>
+        </div>
+
+        <div id="content-history" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Historial de Órdenes</h2>
+                <button onclick="loadOrders()" class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Actualizar
+                </button>
+            </div>
+            <div class="neumorphic-flat rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-black/20 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4 font-bold">ID</th>
+                                <th class="p-4 font-bold">Cliente</th>
+                                <th class="p-4 font-bold">Fecha</th>
+                                <th class="p-4 font-bold">Total</th>
+                                <th class="p-4 font-bold">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-list" class="text-sm">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-config" class="tab-content hidden">
+            <section class="neumorphic-flat rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-6">Datos del Restaurante</h2>
+                <form id="config-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm mb-1">Nombre del Negocio</label>
+                        <input type="text" name="nombre" value="<%= restaurantInfo.config.nombre %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Dirección</label>
+                        <input type="text" name="direccion" value="<%= restaurantInfo.config.direccion %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">WhatsApp (con código país, ej: 57300...)</label>
+                        <input type="text" name="telefonoWhatsApp" value="<%= restaurantInfo.config.telefonoWhatsApp %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">URL Logo/Banner</label>
+                        <input type="text" name="logoUrl" value="<%= restaurantInfo.config.logoUrl %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div class="md:col-span-2 border-t border-[var(--light-shadow)] pt-4 mt-2">
+                        <h3 class="font-bold mb-4">Datos de Transferencia</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm mb-1">Banco / Plataforma</label>
+                                <input type="text" name="bankName" value="<%= restaurantInfo.paymentInfo.transfer.bankName %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Tipo de Cuenta</label>
+                                <input type="text" name="accountType" value="<%= restaurantInfo.paymentInfo.transfer.accountType %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Número de Cuenta/Celular</label>
+                                <input type="text" name="accountNumber" value="<%= restaurantInfo.paymentInfo.transfer.accountNumber %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Titular</label>
+                                <input type="text" name="accountHolder" value="<%= restaurantInfo.paymentInfo.transfer.accountHolder %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 border-t border-[var(--light-shadow)] pt-4 mt-2">
+                        <h3 class="font-bold mb-4">Colores de Marca</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div>
+                                <label class="block text-xs mb-1">Primario (Botones)</label>
+                                <input type="text" name="color_primary" value="<%= restaurantInfo.config.color.primary %>" class="w-full neumorphic-input p-3 rounded-lg text-xs" placeholder="#0cf106">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">Fondo (Oscuro)</label>
+                                <input type="text" name="color_bg" value="<%= restaurantInfo.config.color.bg %>" class="w-full neumorphic-input p-3 rounded-lg text-xs" placeholder="#17171b">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">Texto</label>
+                                <input type="text" name="color_text" value="<%= restaurantInfo.config.color.text %>" class="w-full neumorphic-input p-3 rounded-lg text-xs" placeholder="#e0e1e5">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">Sombra Clara</label>
+                                <input type="text" name="color_light" value="<%= restaurantInfo.config.color.light %>" class="w-full neumorphic-input p-3 rounded-lg text-xs" placeholder="#262222">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">Sombra Oscura</label>
+                                <input type="text" name="color_dark" value="<%= restaurantInfo.config.color.dark %>" class="w-full neumorphic-input p-3 rounded-lg text-xs" placeholder="#000000">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 mt-4">
+                        <button type="submit" class="w-full neumorphic-button py-3 rounded-xl font-bold" style="background-color: var(--primary-color); color: black;">Guardar Configuración</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div id="content-menu" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Gestión de Categorías y Productos</h2>
+                <button onclick="openCategoryModal()" class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Nueva Categoría
+                </button>
+            </div>
+            
+            <div id="categories-container" class="space-y-8">
+            </div>
+        </div>
+
+        <div id="content-promos" class="tab-content hidden">
+            <section class="neumorphic-flat rounded-2xl p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4">Añadir Nueva Promoción</h2>
+                <form id="promo-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1">Nombre del Plato</label>
+                        <input type="text" id="promo-name" required class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1">Descripción</label>
+                        <textarea id="promo-description" required class="w-full neumorphic-input p-3 rounded-lg text-color h-20"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Precio Base</label>
+                        <input type="number" id="promo-basePrice" required class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">URL de la Imagen</label>
+                        <input type="url" id="promo-image" required class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="https://...">
+                    </div>
+                    <div class="md:col-span-2 border-t border-[var(--light-shadow)] pt-4 mt-2">
+                        <h3 class="font-bold mb-2 text-sm text-gray-500 uppercase">Mapeo Externo (VinApp)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs mb-1">ID Producto Externo</label>
+                                <input type="number" id="promo-ext-id" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="Ej: 12345">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">ID Compañía (Opcional)</label>
+                                <input type="number" id="promo-ext-companie" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="8224">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">ID Punto (Opcional)</label>
+                                <input type="number" id="promo-ext-point" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="1640">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 mt-4">
+                        <label class="block text-sm mb-1 text-amber-500 font-bold">Duración de la Promoción (Minutos)</label>
+                        <input type="number" id="promo-duration" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="Ej: 30 (Dejar vacío para permanente)" min="1">
+                        <p class="text-[10px] text-gray-500 mt-1">La promoción se eliminará automáticamente al pasar este tiempo.</p>
+                    </div>
+                    <div class="md:col-span-2 mt-4">
+                        <button type="submit" class="w-full neumorphic-button text-black font-bold py-3 rounded-xl" style="background-color: var(--primary-color);">Guardar Promoción</button>
+                    </div>
+                </form>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold mb-4">Promociones Activas</h2>
+                <div id="promos-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                </div>
+            </section>
+        </div>
+
+        <div id="content-schedule" class="tab-content hidden">
+            <section class="neumorphic-flat rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-6">Horarios de Atención</h2>
+                <form id="schedule-form" class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4" id="schedule-inputs">
+                    </div>
+                    <button type="submit" class="w-full neumorphic-button py-3 rounded-xl font-bold mt-6" style="background-color: var(--primary-color); color: black;">Guardar Horarios</button>
+                </form>
+            </section>
+        </div>
+
+        <div id="content-shipping" class="tab-content hidden">
+            <section class="neumorphic-flat rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Zonas de Envío</h2>
+                    <button type="button" onclick="addShippingZone()" class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Añadir Zona
+                    </button>
+                </div>
+                <form id="shipping-form" class="space-y-4">
+                    <div id="shipping-zones-container" class="space-y-4">
+                    </div>
+                    <button type="submit" class="w-full neumorphic-button py-3 rounded-xl font-bold mt-6" style="background-color: var(--primary-color); color: black;">Guardar Zonas</button>
+                </form>
+            </section>
+        </div>
+
+        <div id="content-notifications" class="tab-content hidden">
+            <section class="neumorphic-flat rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-6">Enviar Notificación Push</h2>
+                <p class="text-sm text-gray-500 mb-6">Este mensaje llegará directamente a los celulares/computadoras de los clientes que hayan aceptado recibir notificaciones.</p>
+                
+                <form id="notification-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm mb-1">Título de la Notificación</label>
+                        <input type="text" id="notif-title" placeholder="Ej: ¡Combo especial hoy!" required class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Mensaje</label>
+                        <textarea id="notif-body" placeholder="Ej: Aprovecha nuestro 2x1 en hamburguesas solo por tiempo limitado." required class="w-full neumorphic-input p-3 rounded-lg text-color h-24"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Enlace (URL opcional)</label>
+                        <input type="text" id="notif-url" placeholder="https://..." class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit" id="send-notif-btn" class="w-full neumorphic-button py-4 rounded-xl font-bold flex items-center justify-center gap-2" style="background-color: var(--primary-color); color: black;">
+                            <i data-lucide="send" class="w-5 h-5"></i> Enviar a todos los usuarios
+                        </button>
+                    </div>
+                </form>
+                <div id="notif-status" class="mt-4 text-center text-sm font-bold hidden"></div>
+            </section>
+        </div>
+
+        <div id="content-clients" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Base de Datos de Clientes</h2>
+                <button onclick="loadClients()" class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Actualizar
+                </button>
+            </div>
+            <div class="neumorphic-flat rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-black/20 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4 font-bold">Nombre</th>
+                                <th class="p-4 font-bold">Teléfono</th>
+                                <th class="p-4 font-bold">Dirección</th>
+                                <th class="p-4 font-bold">Pedidos</th>
+                                <th class="p-4 font-bold">Total Gastado</th>
+                                <th class="p-4 font-bold">Último Pedido</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-list" class="text-sm">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4">
+        <div id="modal-content" class="neumorphic-flat rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+        </div>
+    </div>
+    
+    <div id="toast-container"></div>
+
+    <script>
+        let restaurantInfo = <%- JSON.stringify(restaurantInfo) %>;
+        let menuCategories = [];
+        let allOrders = [];
+
+        async function init() {
+            lucide.createIcons();
+            loadPromos();
+            loadCategories();
+            loadOrders();
+            renderSchedule();
+            renderShippingZones();
+            
+            setInterval(loadOrders, 30000);
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.add('active');
+            lucide.createIcons();
+            
+            if (tabId === 'home' || tabId === 'history') renderOrders();
+        }
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast neumorphic-flat`;
+            
+            let icon = 'info';
+            let color = 'text-color';
+            toast.style.background = '#fecb15';
+            
+            if (type === 'success') {
+                icon = 'check-circle';
+                toast.style.background = '#02f664';
+            } else if (type === 'error') {
+                icon = 'alert-circle';
+                toast.style.background = '#ff3131';
+            }
+
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i data-lucide="${icon}" class="w-5 h-5 text-color"></i>
+                </div>
+                <div class="toast-message text-color">${message}</div>
+            `;
+
+            container.appendChild(toast);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            setTimeout(() => toast.classList.add('active'), 10);
+
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        async function loadOrders() {
+            try {
+                const res = await fetch('/api/admin/orders');
+                const data = await res.json();
+                if (data.success) {
+                    allOrders = data.orders;
+                    renderOrders();
+                }
+            } catch (err) {
+                console.error('Error loading orders:', err);
+            }
+        }
+
+        function renderOrders() {
+            const pendingContainer = document.getElementById('pending-orders-container');
+            const pendingOrders = allOrders.filter(o => o.status === 'pending');
+            document.getElementById('pending-count').textContent = pendingOrders.length;
+            
+            pendingContainer.innerHTML = '';
+            if (pendingOrders.length === 0) {
+                pendingContainer.innerHTML = '<p class="text-center py-8 text-gray-400 neumorphic-flat rounded-2xl">No hay órdenes pendientes. ¡Todo al día!</p>';
+            } else {
+                pendingOrders.forEach(order => {
+                    const card = createOrderCard(order);
+                    pendingContainer.appendChild(card);
+                });
+            }
+
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            allOrders.forEach(order => {
+                const date = new Date(order.createdAt).toLocaleDateString('es-CO');
+                const row = document.createElement('tr');
+                row.className = 'border-t border-[var(--light-shadow)] hover:bg-white/5 cursor-pointer transition-colors';
+                row.onclick = () => openOrderDetails(order._id);
+                row.innerHTML = `
+                    <td class="p-4 font-bold">#${order.shortId || order._id.slice(-6)}</td>
+                    <td class="p-4">${order.clientName}</td>
+                    <td class="p-4 text-xs text-gray-400">${date}</td>
+                    <td class="p-4 font-bold text-green-500">$${order.total.toLocaleString()}</td>
+                    <td class="p-4"><span class="text-[10px] px-2 py-0.5 rounded-full ${getStatusClass(order.status)} uppercase font-bold">${order.status}</span></td>
+                `;
+                historyList.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function createOrderCard(order) {
+            const date = new Date(order.createdAt).toLocaleString('es-CO');
+            const orderEl = document.createElement('div');
+            orderEl.className = 'neumorphic-flat rounded-2xl p-6 border-l-4 ' + 
+                (order.status === 'completed' ? 'border-green-500' : (order.status === 'cancelled' ? 'border-red-500' : 'border-yellow-500'));
+            
+            orderEl.innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between gap-4 mb-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-black text-lg text-color">#${order.shortId || order._id.slice(-6)}</span>
+                            <span class="text-xs px-2 py-1 rounded-full ${getStatusClass(order.status)} uppercase font-bold">${order.status}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">${date}</p>
+                    </div>
+                    <div class="flex gap-2 h-fit">
+                        <select onchange="updateOrderStatus('${order._id}', this.value)" class="neumorphic-input p-2 rounded-lg text-xs">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completada</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelada</option>
+                        </select>
+                        <button onclick="deleteOrder('${order._id}')" class="neumorphic-button p-2 rounded-lg text-red-500">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-[var(--light-shadow)] pt-4">
+                    <div>
+                        <h4 class="font-bold text-sm mb-2 uppercase text-gray-500 tracking-wider">Cliente</h4>
+                        <p class="font-bold">${order.clientName}</p>
+                        <p class="text-sm">${order.clientPhone}</p>
+                        <p class="text-sm text-gray-400">${order.clientAddress}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm mb-2 uppercase text-gray-500 tracking-wider">Pedido</h4>
+                        <div class="space-y-1">
+                            ${order.items.map(item => `<div class="flex justify-between text-sm"><span>${item.quantity}x ${item.name}</span><span>$${(item.price * item.quantity).toLocaleString()}</span></div>`).join('')}
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-[var(--light-shadow)] flex justify-between font-bold text-lg" style="color: var(--primary-color);">
+                            <span>TOTAL</span>
+                            <span>$${order.total.toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return orderEl;
+        }
+
+        function openOrderDetails(id) {
+            const order = allOrders.find(o => o._id === id);
+            if (!order) return;
+
+            const modal = document.getElementById('modal-content');
+            modal.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Detalles de la Orden #${order.shortId || order._id.slice(-6)}</h3>
+                    <button onclick="closeModal()" class="neumorphic-button p-2 rounded-full"><i data-lucide="x"></i></button>
+                </div>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="neumorphic-input p-4 rounded-xl">
+                            <h4 class="text-xs uppercase text-gray-500 mb-2">Cliente</h4>
+                            <p class="font-bold text-sm">${order.clientName}</p>
+                            <p class="text-sm">${order.clientPhone}</p>
+                            <p class="text-xs text-gray-400">${order.clientAddress}</p>
+                        </div>
+                        <div class="neumorphic-input p-4 rounded-xl">
+                            <h4 class="text-xs uppercase text-gray-500 mb-2">Pago y Estado</h4>
+                            <p class="text-sm">Método: <span class="font-bold">${order.paymentMethod.toUpperCase()}</span></p>
+                            ${order.cashAmount ? `<p class="text-sm">Paga con: <strong>$${order.cashAmount.toLocaleString()}</strong></p>` : ''}
+                            <div class="mt-2">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full ${getStatusClass(order.status)} uppercase font-bold">${order.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="neumorphic-input p-4 rounded-xl">
+                        <h4 class="text-xs uppercase text-gray-500 mb-2">Productos</h4>
+                        <div class="space-y-2">
+                            ${order.items.map(item => `
+                                <div class="flex justify-between text-sm border-b border-white/5 pb-1">
+                                    <span>${item.quantity}x ${item.name}</span>
+                                    <span>$${(item.price * item.quantity).toLocaleString()}</span>
+                                </div>
+                                ${item.instructions ? `<p class="text-[10px] italic text-gray-500 pl-4">"${item.instructions}"</p>` : ''}
+                            `).join('')}
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-[var(--light-shadow)] space-y-1">
+                            <div class="flex justify-between text-xs text-gray-400"><span>Subtotal</span><span>$${order.subtotal.toLocaleString()}</span></div>
+                            <div class="flex justify-between text-xs text-gray-400"><span>Envío</span><span>$${order.shippingCost.toLocaleString()}</span></div>
+                            <div class="flex justify-between font-bold text-lg pt-1" style="color: var(--primary-color);"><span>TOTAL</span><span>$${order.total.toLocaleString()}</span></div>
+                        </div>
+                    </div>
+
+                    ${order.comments ? `
+                        <div class="neumorphic-input p-4 rounded-xl">
+                            <h4 class="text-xs uppercase text-gray-500 mb-1">Comentarios</h4>
+                            <p class="text-sm italic">"${order.comments}"</p>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex gap-4">
+                        <select onchange="updateOrderStatus('${order._id}', this.value); closeModal();" class="flex-grow neumorphic-input p-3 rounded-xl text-sm">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completada</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelada</option>
+                        </select>
+                        <button onclick="deleteOrder('${order._id}'); closeModal();" class="neumorphic-button p-3 rounded-xl text-red-500">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'completed': return 'bg-green-500/20 text-green-500';
+                case 'cancelled': return 'bg-red-500/20 text-red-500';
+                default: return 'bg-yellow-500/20 text-yellow-500';
+            }
+        }
+
+        async function updateOrderStatus(id, status) {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            if (res.ok) loadOrders();
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm('¿Eliminar registro de la orden?')) return;
+            const res = await fetch(`/api/admin/orders/${id}`, { method: 'DELETE' });
+            if (res.ok) loadOrders();
+        }
+
+        // --- Configuración ---
+        document.getElementById('config-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                config: {
+                    nombre: formData.get('nombre'),
+                    direccion: formData.get('direccion'),
+                    telefonoWhatsApp: formData.get('telefonoWhatsApp'),
+                    logoUrl: formData.get('logoUrl'),
+                    color: {
+                        primary: formData.get('color_primary'),
+                        bg: formData.get('color_bg'),
+                        text: formData.get('color_text'),
+                        light: formData.get('color_light'),
+                        dark: formData.get('color_dark')
+                    }
+                }
+            };
+
+            const res = await fetch('/api/restaurant-info', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) showToast('Configuración guardada.', 'success');
+        };
+
+        // --- Menú ---
+        async function loadCategories() {
+            const res = await fetch('/api/menu-categories');
+            menuCategories = await res.json();
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+
+            menuCategories.forEach(cat => {
+                const catEl = document.createElement('div');
+                catEl.className = 'neumorphic-flat rounded-2xl p-6';
+                catEl.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            ${cat.category}
+                            <span class="text-xs ${cat.active ? 'text-green-500' : 'text-red-500'} font-normal">
+                                (${cat.active ? 'Activa' : 'Desactivada'})
+                            </span>
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="openItemModal('${cat._id}')" class="text-sm neumorphic-button px-3 py-1 rounded-lg flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3 h-3"></i> Item
+                            </button>
+                            <button onclick="editCategory('${cat._id}')" class="text-sm neumorphic-button px-3 py-1 rounded-lg">
+                                <i data-lucide="edit-2" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="deleteCategory('${cat._id}')" class="text-sm neumorphic-button px-3 py-1 rounded-lg text-red-500">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${cat.items.map(item => `
+                            <div class="neumorphic-input rounded-xl p-4 flex justify-between items-center ${!item.active ? 'opacity-50' : ''}">
+                                <div>
+                                    <p class="font-bold text-sm">${item.name}</p>
+                                    <p class="text-xs text-gray-400">$${item.basePrice.toLocaleString()}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="editItem('${cat._id}', '${item._id}')" class="p-2 neumorphic-button rounded-lg">
+                                        <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                    </button>
+                                    <button onclick="deleteItem('${cat._id}', '${item._id}')" class="p-2 neumorphic-button rounded-lg text-red-500">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(catEl);
+            });
+            lucide.createIcons();
+        }
+
+        function openCategoryModal(catId = null) {
+            const cat = catId ? menuCategories.find(c => c._id === catId) : null;
+            const modal = document.getElementById('modal-content');
+            modal.innerHTML = `
+                <h3 class="text-xl font-bold mb-4">${cat ? 'Editar' : 'Nueva'} Categoría</h3>
+                <form id="category-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm mb-1">Nombre de la Categoría</label>
+                        <input type="text" id="cat-name" value="${cat ? cat.category : ''}" required class="w-full neumorphic-input p-3 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Orden (número)</label>
+                        <input type="number" id="cat-order" value="${cat ? cat.order : 0}" class="w-full neumorphic-input p-3 rounded-lg">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="cat-active" ${cat ? (cat.active ? 'checked' : '') : 'checked'} class="w-4 h-4">
+                        <label class="text-sm">Categoría Activa</label>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="flex-grow neumorphic-button py-3 rounded-xl font-bold" style="background-color: var(--primary-color); color: black;">Guardar</button>
+                        <button type="button" onclick="closeModal()" class="flex-grow neumorphic-button py-3 rounded-xl font-bold">Cancelar</button>
+                    </div>
+                </form>
+            `;
+            document.getElementById('category-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const data = {
+                    category: document.getElementById('cat-name').value,
+                    order: parseInt(document.getElementById('cat-order').value),
+                    active: document.getElementById('cat-active').checked
+                };
+                const res = await fetch(cat ? `/api/menu-categories/${cat._id}` : '/api/menu-categories', {
+                    method: cat ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) { closeModal(); loadCategories(); }
+            };
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+
+        function openItemModal(catId, itemId = null) {
+            const cat = menuCategories.find(c => c._id === catId);
+            const item = itemId ? cat.items.find(i => i._id === itemId) : null;
+            const modal = document.getElementById('modal-content');
+            modal.innerHTML = `
+                <h3 class="text-xl font-bold mb-4">${item ? 'Editar' : 'Nuevo'} Producto</h3>
+                <form id="item-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm mb-1">Nombre del Producto</label>
+                        <input type="text" id="item-name" value="${item ? item.name : ''}" required class="w-full neumorphic-input p-3 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Descripción</label>
+                        <textarea id="item-desc" class="w-full neumorphic-input p-3 rounded-lg h-20">${item ? item.description : ''}</textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm mb-1">Precio</label>
+                            <input type="number" id="item-price" value="${item ? item.basePrice : 0}" required class="w-full neumorphic-input p-3 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">ID numérico (para orden)</label>
+                            <input type="number" id="item-order-id" value="${item ? item.id : 0}" class="w-full neumorphic-input p-3 rounded-lg">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Instrucciones Cocina</label>
+                        <input type="text" id="item-kitchen" value="${item ? (item.kitchenGuide || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg">
+                    </div>
+                    <div class="md:col-span-2 border-t border-[var(--light-shadow)] pt-4 mt-2">
+                        <h3 class="font-bold mb-2 text-sm text-gray-500 uppercase">Mapeo Externo (VinApp)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs mb-1">ID Producto Externo</label>
+                                <input type="number" id="item-ext-id" value="${item && item.externalMapping ? item.externalMapping.id_product : ''}" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="Ej: 12345">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">ID Compañía (Opcional)</label>
+                                <input type="number" id="item-ext-companie" value="${item && item.externalMapping ? (item.externalMapping.id_companie || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="8224">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">ID Punto (Opcional)</label>
+                                <input type="number" id="item-ext-point" value="${item && item.externalMapping ? (item.externalMapping.id_point || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="1640">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="item-active" ${item ? (item.active ? 'checked' : '') : 'checked'} class="w-4 h-4">
+                        <label class="text-sm">Producto Activo</label>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="flex-grow neumorphic-button py-3 rounded-xl font-bold" style="background-color: var(--primary-color); color: black;">Guardar</button>
+                        <button type="button" onclick="closeModal()" class="flex-grow neumorphic-button py-3 rounded-xl font-bold">Cancelar</button>
+                    </div>
+                </form>
+            `;
+            document.getElementById('item-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const extId = document.getElementById('item-ext-id').value;
+                const extComp = document.getElementById('item-ext-companie').value;
+                const extPoint = document.getElementById('item-ext-point').value;
+
+                const newItem = {
+                    name: document.getElementById('item-name').value,
+                    description: document.getElementById('item-desc').value,
+                    basePrice: parseInt(document.getElementById('item-price').value),
+                    id: parseInt(document.getElementById('item-order-id').value),
+                    kitchenGuide: document.getElementById('item-kitchen').value,
+                    active: document.getElementById('item-active').checked,
+                    externalMapping: {
+                        ...(item ? item.externalMapping : {}),
+                        id_product: extId ? parseInt(extId) : null,
+                        id_companie: extComp ? parseInt(extComp) : null,
+                        id_point: extPoint ? parseInt(extPoint) : null,
+                        name_product: document.getElementById('item-name').value,
+                        valor: parseInt(document.getElementById('item-price').value)
+                    }
+                };
+                
+                let updatedItems;
+                if (item) {
+                    updatedItems = cat.items.map(i => i._id === item._id ? { ...i, ...newItem } : i);
+                } else {
+                    updatedItems = [...cat.items, newItem];
+                }
+
+                const res = await fetch(`/api/menu-categories/${cat._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: updatedItems })
+                });
+                if (res.ok) { closeModal(); loadCategories(); }
+            };
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
+        function editCategory(id) { openCategoryModal(id); }
+        async function deleteCategory(id) {
+            if (!confirm('¿Seguro? Se borrarán todos los items de esta categoría.')) return;
+            await fetch(`/api/menu-categories/${id}`, { method: 'DELETE' });
+            loadCategories();
+        }
+
+        function editItem(catId, itemId) { openItemModal(catId, itemId); }
+        async function deleteItem(catId, itemId) {
+            if (!confirm('¿Eliminar producto?')) return;
+            const cat = menuCategories.find(c => c._id === catId);
+            const updatedItems = cat.items.filter(i => i._id !== itemId);
+            await fetch(`/api/menu-categories/${catId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: updatedItems })
+            });
+            loadCategories();
+        }
+
+        // --- Promociones ---
+        async function loadPromos() {
+            const res = await fetch('/api/promotions');
+            const promos = await res.json();
+            const container = document.getElementById('promos-list');
+            container.innerHTML = '';
+
+            promos.forEach(promo => {
+                const card = document.createElement('div');
+                card.className = 'neumorphic-flat rounded-2xl overflow-hidden';
+                card.innerHTML = `
+                    <img src="${promo.image}" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg">${promo.name}</h3>
+                        <p class="font-bold text-green-500">$${promo.basePrice.toLocaleString()}</p>
+                        ${promo.expiresAt ? `
+                            <p class="text-[10px] text-amber-600 mt-2 font-bold">
+                                ⏳ Expira: ${new Date(promo.expiresAt).toLocaleString()}
+                            </p>
+                        ` : ''}
+                        <button onclick="deletePromo('${promo._id}')" class="mt-4 text-red-500 text-sm flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        document.getElementById('promo-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('promo-name').value,
+                description: document.getElementById('promo-description').value,
+                basePrice: parseInt(document.getElementById('promo-basePrice').value),
+                image: document.getElementById('promo-image').value,
+                duration: document.getElementById('promo-duration').value ? parseInt(document.getElementById('promo-duration').value) : null,
+                externalMapping: {
+                    id_product: parseInt(document.getElementById('promo-ext-id').value) || null,
+                    id_companie: parseInt(document.getElementById('promo-ext-companie').value) || null,
+                    id_point: parseInt(document.getElementById('promo-ext-point').value) || null,
+                    name_product: document.getElementById('promo-name').value,
+                    valor: parseInt(document.getElementById('promo-basePrice').value)
+                }
+            };
+            const res = await fetch('/api/promotions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) { e.target.reset(); loadPromos(); }
+        };
+
+        async function deletePromo(id) {
+            if (confirm('¿Eliminar promoción?')) {
+                await fetch(`/api/promotions/${id}`, { method: 'DELETE' });
+                loadPromos();
+            }
+        }
+
+        // --- Horarios ---
+        function renderSchedule() {
+            const container = document.getElementById('schedule-inputs');
+            container.innerHTML = '';
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            
+            days.forEach((day, index) => {
+                const s = restaurantInfo.schedule.find(item => item.day === index) || { open: '18:00', close: '23:30' };
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-3 gap-4 items-center';
+                div.innerHTML = `
+                    <span class="font-bold">${day}</span>
+                    <input type="text" name="open_${index}" value="${s.open}" class="neumorphic-input p-2 rounded-lg text-sm" placeholder="18:00 o 24h o closed">
+                    <input type="text" name="close_${index}" value="${s.close}" class="neumorphic-input p-2 rounded-lg text-sm" placeholder="23:30">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById('schedule-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const schedule = [];
+            for(let i=0; i<7; i++) {
+                schedule.push({
+                    day: i,
+                    open: formData.get(`open_${i}`),
+                    close: formData.get(`close_${i}`)
+                });
+            }
+            const res = await fetch('/api/restaurant-info', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ schedule })
+            });
+            if (res.ok) showToast('Horarios guardados', 'success');
+        };
+
+        // --- Envíos ---
+        function renderShippingZones() {
+            const container = document.getElementById('shipping-zones-container');
+            container.innerHTML = '';
+            restaurantInfo.shippingZones.forEach((zone, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex gap-4 items-center';
+                div.innerHTML = `
+                    <input type="text" name="zone_name_${index}" value="${zone.name}" class="flex-grow neumorphic-input p-3 rounded-lg" placeholder="Nombre de la zona">
+                    <input type="number" name="zone_price_${index}" value="${zone.price}" class="w-32 neumorphic-input p-3 rounded-lg" placeholder="Precio">
+                    <button type="button" onclick="removeShippingZone(${index})" class="text-red-500 neumorphic-button p-3 rounded-lg"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                `;
+                container.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function addShippingZone() {
+            restaurantInfo.shippingZones.push({ name: '', price: 0 });
+            renderShippingZones();
+        }
+
+        function removeShippingZone(index) {
+            restaurantInfo.shippingZones.splice(index, 1);
+            renderShippingZones();
+        }
+
+        document.getElementById('shipping-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const zones = [];
+            const container = document.getElementById('shipping-zones-container');
+            const rows = container.children;
+            for(let i=0; i<rows.length; i++) {
+                const name = rows[i].querySelector(`input[name^="zone_name"]`).value;
+                const price = parseInt(rows[i].querySelector(`input[name^="zone_price"]`).value);
+                if (name) zones.push({ name, price });
+            }
+            const res = await fetch('/api/restaurant-info', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shippingZones: zones })
+            });
+            if (res.ok) showToast('Zonas guardadas', success);
+        };
+
+        // --- Notificaciones ---
+        document.getElementById('notification-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('send-notif-btn');
+            const status = document.getElementById('notif-status');
+            
+            const data = {
+                title: document.getElementById('notif-title').value,
+                body: document.getElementById('notif-body').value,
+                url: document.getElementById('notif-url').value
+            };
+
+            if (!confirm('¿Estás seguro de enviar esta notificación a TODOS tus clientes suscritos?')) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="w-5 h-5 animate-spin"></i> Enviando...';
+            lucide.createIcons();
+            
+            try {
+                const res = await fetch('/api/notifications/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await res.json();
+                if (result.success) {
+                    status.textContent = `¡Éxito! Notificación enviada a ${result.count} suscriptores.`;
+                    status.className = 'mt-4 text-center text-sm font-bold text-green-500';
+                    e.target.reset();
+                } else {
+                    status.textContent = 'Error al enviar las notificaciones.';
+                    status.className = 'mt-4 text-center text-sm font-bold text-red-500';
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                status.textContent = 'Error de conexión con el servidor.';
+                status.className = 'mt-4 text-center text-sm font-bold text-red-500';
+            } finally {
+                status.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="send" class="w-5 h-5"></i> Enviar a todos los usuarios';
+                lucide.createIcons();
+            }
+        };
+
+        // --- Clientes ---
+        async function loadClients() {
+            const list = document.getElementById('clients-list');
+            list.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Cargando clientes...</td></tr>';
+            
+            try {
+                const res = await fetch('/api/admin/clients');
+                const data = await res.json();
+                
+                if (data.success) {
+                    list.innerHTML = '';
+                    if (data.users.length === 0) {
+                        list.innerHTML = '<tr><td colspan="5" class="p-4 text-center">No hay clientes registrados aún.</td></tr>';
+                        return;
+                    }
+                    
+                    data.users.forEach(user => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'border-t border-black/10 hover:bg-black/5 transition-colors';
+                        tr.innerHTML = `
+                            <td class="p-4 font-bold text-color">${user.name}</td>
+                            <td class="p-4 text-gray-400">${user.phone}</td>
+                            <td class="p-4 text-gray-400 text-xs">${user.address}</td>
+                            <td class="p-4 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">${user.orderCount}</span></td>
+                            <td class="p-4 font-bold accent-text">$${(user.totalSpent || 0).toLocaleString()}</td>
+                            <td class="p-4 text-gray-400 text-xs">${new Date(user.lastOrderAt).toLocaleString()}</td>
+                        `;
+                        list.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Error al cargar clientes.</td></tr>';
+            }
+        }
+
+        const originalShowTab = window.showTab;
+        window.showTab = (tabName) => {
+            if (tabName === 'clients') loadClients();
+            if (typeof originalShowTab === 'function') originalShowTab(tabName);
+            else {
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(`content-${tabName}`).classList.remove('hidden');
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+            }
+        };
+
+        init();
+    </script>
+</body>
+</html>
