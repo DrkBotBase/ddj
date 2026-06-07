@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mjfood-cache-v1-3';
+const CACHE_NAME = 'mjfood-cache-v1-4';
 const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [
@@ -15,8 +15,21 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
-      return cache.addAll(ASSETS_TO_CACHE);
+      console.log('Installing Service Worker and caching assets');
+      const cachePromises = ASSETS_TO_CACHE.map(url => {
+        return fetch(url, { mode: url.includes('http') ? 'no-cors' : 'same-origin' })
+          .then(response => {
+            if (response.status === 200 || response.type === 'opaque') {
+              return cache.put(url, response);
+            }
+            return Promise.resolve();
+          })
+          .catch(err => {
+            console.warn('Fallo al cachear:', url, err);
+            return Promise.resolve();
+          });
+      });
+      return Promise.all(cachePromises);
     })
   );
   self.skipWaiting();
@@ -43,20 +56,29 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
   
-  if (url.pathname === '/') {
+  if (url.pathname === '/' || url.pathname === '/manifest.json') {
     event.respondWith(
-      caches.match(rutaBase).then((response) => {
-        if (response) {
+      fetch(request)
+        .then((response) => {
+          if (response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
           return response;
-        }
-        return fetch(rutaBase);
-      })
+        })
+        .catch(() => {
+          return caches.match(request, { ignoreSearch: true }).then(cachedResponse => {
+            return cachedResponse || caches.match(rutaBase);
+          });
+        })
     );
     return;
   }
   
   event.respondWith(
-    caches.match(request).then((response) => {
+    caches.match(request, { ignoreSearch: true }).then((response) => {
       if (response) {
         return response;
       }
@@ -67,10 +89,9 @@ self.addEventListener('fetch', (event) => {
         }
 
         const responseToCache = response.clone();
-
         caches.open(CACHE_NAME).then((cache) => {
-          if (event.request.method === 'GET') {
-            cache.put(event.request, responseToCache);
+          if (request.method === 'GET') {
+            cache.put(request, responseToCache);
           }
         });
 
@@ -79,23 +100,29 @@ self.addEventListener('fetch', (event) => {
         if (request.mode === 'navigate') {
           return caches.match(rutaBase);
         }
-        return caches.match('/');
+        return null;
       });
     })
   );
 });
 
 self.addEventListener('push', (event) => {
-  const data = event.data.json();
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch (e) {
+    data = { title: 'MJFOOD', body: event.data.text() };
+  }
+  
   const options = {
     body: data.body,
     icon: data.icon || 'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp',
     badge: 'https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp',
-    data: data.data
+    data: data.data || { url: rutaBase }
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title || 'MJFOOD', options)
   );
 });
 

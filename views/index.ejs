@@ -495,6 +495,14 @@
         }
         
         function initializeApp(data) {
+            if (!data || !data.config) {
+                console.error('No restaurant data available');
+                document.getElementById('status-indicator').textContent = 'Error de carga';
+                document.getElementById('status-indicator').className = 'status-indicator status-closed';
+                showToast('No se pudieron cargar los datos del menú.', 'error');
+                return;
+            }
+
             const root = document.documentElement;
             if (data.config.color) {
                 if (data.config.color.text) root.style.setProperty('--text-color', data.config.color.text);
