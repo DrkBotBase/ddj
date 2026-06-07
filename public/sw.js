@@ -1,5 +1,5 @@
-const CACHE_NAME = 'mjfood-cache-v1-1';
-const rutaBase = '/ddj';
+const CACHE_NAME = 'mjfood-cache-v1-2';
+const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [
   rutaBase,
