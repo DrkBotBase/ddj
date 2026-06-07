@@ -4,7 +4,7 @@
   "description": "La mejor comida rápida y combos para disfrutar desde casa.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#edebe4",
+  "background_color": "rgb(256,212,34)",
   "theme_color": "#edebe4",
   "orientation": "portrait",
   "icons": [
