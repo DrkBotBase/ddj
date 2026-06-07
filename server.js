@@ -16,7 +16,7 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'secret-key_mjfood',
+    secret: process.env.SESSION_SECRET || 'secret-key-123_mjfood',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 24 * 60 * 60 * 1000 }
