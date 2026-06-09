@@ -244,55 +244,15 @@
         </div>
 
         <div id="content-promos" class="tab-content hidden">
-            <section class="neumorphic-flat rounded-2xl p-6 mb-8">
-                <h2 class="text-xl font-bold mb-4">Añadir Nueva Promoción</h2>
-                <form id="promo-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm mb-1">Nombre del Plato</label>
-                        <input type="text" id="promo-name" required class="w-full neumorphic-input p-3 rounded-lg text-color">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm mb-1">Descripción</label>
-                        <textarea id="promo-description" required class="w-full neumorphic-input p-3 rounded-lg text-color h-20"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-1">Precio Base</label>
-                        <input type="number" id="promo-basePrice" required class="w-full neumorphic-input p-3 rounded-lg text-color">
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-1">URL de la Imagen</label>
-                        <input type="url" id="promo-image" required class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="https://...">
-                    </div>
-                    <div class="md:col-span-2 border-t border-[var(--light-shadow)] pt-4 mt-2">
-                        <h3 class="font-bold mb-2 text-sm text-gray-500 uppercase">Mapeo Externo (VinApp)</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs mb-1">ID Producto Externo</label>
-                                <input type="number" id="promo-ext-id" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="Ej: 12345">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">ID Compañía (Opcional)</label>
-                                <input type="number" id="promo-ext-companie" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="8224">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">ID Punto (Opcional)</label>
-                                <input type="number" id="promo-ext-point" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="1640">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="md:col-span-2 mt-4">
-                        <label class="block text-sm mb-1 text-amber-500 font-bold">Duración de la Promoción (Minutos)</label>
-                        <input type="number" id="promo-duration" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="Ej: 30 (Dejar vacío para permanente)" min="1">
-                        <p class="text-[10px] text-gray-500 mt-1">La promoción se eliminará automáticamente al pasar este tiempo.</p>
-                    </div>
-                    <div class="md:col-span-2 mt-4">
-                        <button type="submit" class="w-full neumorphic-button text-black font-bold py-3 rounded-xl" style="background-color: var(--primary-color);">Guardar Promoción</button>
-                    </div>
-                </form>
-            </section>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Gestión de Promociones</h2>
+                <button onclick="openPromoModal()" class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i> Nueva Promoción
+                </button>
+            </div>
 
             <section>
-                <h2 class="text-xl font-bold mb-4">Promociones Activas</h2>
+                <h2 class="text-lg font-bold mb-4">Promociones Activas</h2>
                 <div id="promos-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 </div>
             </section>
@@ -310,15 +270,15 @@
         </div>
 
         <div id="content-shipping" class="tab-content hidden">
-            <section class="neumorphic-flat rounded-2xl p-6">
-                <div class="flex justify-between items-center mb-6">
+            <section class="neumorphic-flat rounded-2xl p-4 md:p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <h2 class="text-xl font-bold">Zonas de Envío</h2>
-                    <button type="button" onclick="addShippingZone()" class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <button type="button" onclick="addShippingZone()" class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2 w-full sm:w-auto justify-center">
                         <i data-lucide="plus" class="w-4 h-4"></i> Añadir Zona
                     </button>
                 </div>
                 <form id="shipping-form" class="space-y-4">
-                    <div id="shipping-zones-container" class="space-y-4">
+                    <div id="shipping-zones-container" class="space-y-6 sm:space-y-4">
                     </div>
                     <button type="submit" class="w-full neumorphic-button py-3 rounded-xl font-bold mt-6" style="background-color: var(--primary-color); color: black;">Guardar Zonas</button>
                 </form>
@@ -565,8 +525,13 @@
                         </div>
                         <div class="neumorphic-input p-4 rounded-xl">
                             <h4 class="text-xs uppercase text-gray-500 mb-2">Pago y Estado</h4>
-                            <p class="text-sm">Método: <span class="font-bold">${order.paymentMethod.toUpperCase()}</span></p>
-                            ${order.cashAmount ? `<p class="text-sm">Paga con: <strong>$${order.cashAmount.toLocaleString()}</strong></p>` : ''}
+                            <p class="text-sm">Método: <span class="font-bold uppercase">${order.paymentMethod}</span></p>
+                            ${order.paymentMethod === 'multipago' ? `
+                                <div class="mt-1 text-[11px] text-gray-400">
+                                    <p>💵 Efectivo: $${(order.cashAmount || 0).toLocaleString()}</p>
+                                    <p>💳 Transf: $${(order.transferAmount || 0).toLocaleString()}</p>
+                                </div>
+                            ` : (order.cashAmount ? `<p class="text-sm">Paga con: <strong>$${order.cashAmount.toLocaleString()}</strong></p>` : '')}
                             <div class="mt-2">
                                 <span class="text-[10px] px-2 py-0.5 rounded-full ${getStatusClass(order.status)} uppercase font-bold">${order.status}</span>
                             </div>
@@ -886,28 +851,35 @@
         }
 
         // --- Promociones ---
+        let currentPromos = [];
         async function loadPromos() {
             const res = await fetch('/api/promotions');
-            const promos = await res.json();
+            currentPromos = await res.json();
             const container = document.getElementById('promos-list');
             container.innerHTML = '';
 
-            promos.forEach(promo => {
+            currentPromos.forEach(promo => {
                 const card = document.createElement('div');
                 card.className = 'neumorphic-flat rounded-2xl overflow-hidden';
                 card.innerHTML = `
                     <img src="${promo.image}" class="w-full h-40 object-cover">
                     <div class="p-4">
                         <h3 class="font-bold text-lg">${promo.name}</h3>
+                        <p class="text-xs text-gray-500 mb-2 line-clamp-2">${promo.description}</p>
                         <p class="font-bold text-green-500">$${promo.basePrice.toLocaleString()}</p>
                         ${promo.expiresAt ? `
                             <p class="text-[10px] text-amber-600 mt-2 font-bold">
                                 ⏳ Expira: ${new Date(promo.expiresAt).toLocaleString()}
                             </p>
                         ` : ''}
-                        <button onclick="deletePromo('${promo._id}')" class="mt-4 text-red-500 text-sm flex items-center gap-1">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar
-                        </button>
+                        <div class="flex gap-4 mt-4">
+                            <button onclick="editPromo('${promo._id}')" class="text-blue-500 text-sm flex items-center gap-1">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i> Editar
+                            </button>
+                            <button onclick="deletePromo('${promo._id}')" class="text-red-500 text-sm flex items-center gap-1">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar
+                            </button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -915,34 +887,101 @@
             lucide.createIcons();
         }
 
-        document.getElementById('promo-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const data = {
-                name: document.getElementById('promo-name').value,
-                description: document.getElementById('promo-description').value,
-                basePrice: parseInt(document.getElementById('promo-basePrice').value),
-                image: document.getElementById('promo-image').value,
-                duration: document.getElementById('promo-duration').value ? parseInt(document.getElementById('promo-duration').value) : null,
-                externalMapping: {
-                    id_product: parseInt(document.getElementById('promo-ext-id').value) || null,
-                    id_companie: parseInt(document.getElementById('promo-ext-companie').value) || null,
-                    id_point: parseInt(document.getElementById('promo-ext-point').value) || null,
-                    name_product: document.getElementById('promo-name').value,
-                    valor: parseInt(document.getElementById('promo-basePrice').value)
+        function openPromoModal(promoId = null) {
+            const promo = promoId ? currentPromos.find(p => p._id === promoId) : null;
+            const modal = document.getElementById('modal-content');
+            modal.innerHTML = `
+                <h3 class="text-xl font-bold mb-4">${promo ? 'Editar' : 'Nueva'} Promoción</h3>
+                <form id="promo-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm mb-1">Nombre del Plato</label>
+                        <input type="text" id="promo-name" value="${promo ? promo.name : ''}" required class="w-full neumorphic-input p-3 rounded-lg text-color">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Descripción</label>
+                        <textarea id="promo-description" required class="w-full neumorphic-input p-3 rounded-lg text-color h-20">${promo ? promo.description : ''}</textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm mb-1">Precio Base</label>
+                            <input type="number" id="promo-basePrice" value="${promo ? promo.basePrice : ''}" required class="w-full neumorphic-input p-3 rounded-lg text-color">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">URL de la Imagen</label>
+                            <input type="url" id="promo-image" value="${promo ? promo.image : ''}" required class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="border-t border-[var(--light-shadow)] pt-4 mt-2">
+                        <h3 class="font-bold mb-2 text-sm text-gray-500 uppercase">Mapeo Externo (VinApp)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs mb-1">ID Producto Externo</label>
+                                <input type="number" id="promo-ext-id" value="${promo && promo.externalMapping ? (promo.externalMapping.id_product || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="Ej: 12345">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">ID Compañía (Opcional)</label>
+                                <input type="number" id="promo-ext-companie" value="${promo && promo.externalMapping ? (promo.externalMapping.id_companie || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="8224">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">ID Punto (Opcional)</label>
+                                <input type="number" id="promo-ext-point" value="${promo && promo.externalMapping ? (promo.externalMapping.id_point || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="1640">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1 text-amber-500 font-bold">Duración de la Promoción (Minutos)</label>
+                        <input type="number" id="promo-duration" class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="Ej: 30 (Dejar vacío para permanente)" min="1">
+                        <p class="text-[10px] text-gray-500 mt-1">${promo && promo.expiresAt ? 'Actualmente expira el: ' + new Date(promo.expiresAt).toLocaleString() : 'La promoción se eliminará automáticamente al pasar este tiempo.'}</p>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="flex-grow neumorphic-button py-3 rounded-xl font-bold" style="background-color: var(--primary-color); color: black;">Guardar</button>
+                        <button type="button" onclick="closeModal()" class="flex-grow neumorphic-button py-3 rounded-xl font-bold">Cancelar</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById('promo-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const durationVal = document.getElementById('promo-duration').value;
+                const data = {
+                    name: document.getElementById('promo-name').value,
+                    description: document.getElementById('promo-description').value,
+                    basePrice: parseInt(document.getElementById('promo-basePrice').value),
+                    image: document.getElementById('promo-image').value,
+                    duration: durationVal ? parseInt(durationVal) : (promo ? null : null),
+                    externalMapping: {
+                        id_product: parseInt(document.getElementById('promo-ext-id').value) || null,
+                        id_companie: parseInt(document.getElementById('promo-ext-companie').value) || null,
+                        id_point: parseInt(document.getElementById('promo-ext-point').value) || null,
+                        name_product: document.getElementById('promo-name').value,
+                        valor: parseInt(document.getElementById('promo-basePrice').value)
+                    }
+                };
+
+                const res = await fetch(promo ? `/api/promotions/${promo._id}` : '/api/promotions', {
+                    method: promo ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) { 
+                    closeModal(); 
+                    loadPromos(); 
+                    showToast(promo ? 'Promoción actualizada' : 'Promoción creada', 'success');
+                } else {
+                    showToast('Error al guardar la promoción', 'error');
                 }
             };
-            const res = await fetch('/api/promotions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (res.ok) { e.target.reset(); loadPromos(); }
-        };
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function editPromo(id) { openPromoModal(id); }
 
         async function deletePromo(id) {
             if (confirm('¿Eliminar promoción?')) {
                 await fetch(`/api/promotions/${id}`, { method: 'DELETE' });
                 loadPromos();
+                showToast('Promoción eliminada', 'success');
             }
         }
 
@@ -990,11 +1029,19 @@
             container.innerHTML = '';
             restaurantInfo.shippingZones.forEach((zone, index) => {
                 const div = document.createElement('div');
-                div.className = 'flex gap-4 items-center';
+                div.className = 'flex flex-col sm:flex-row gap-3 items-start sm:items-center neumorphic-input p-4 rounded-xl relative';
                 div.innerHTML = `
-                    <input type="text" name="zone_name_${index}" value="${zone.name}" class="flex-grow neumorphic-input p-3 rounded-lg" placeholder="Nombre de la zona">
-                    <input type="number" name="zone_price_${index}" value="${zone.price}" class="w-32 neumorphic-input p-3 rounded-lg" placeholder="Precio">
-                    <button type="button" onclick="removeShippingZone(${index})" class="text-red-500 neumorphic-button p-3 rounded-lg"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    <div class="w-full sm:flex-grow">
+                        <label class="block text-[10px] uppercase text-gray-500 mb-1 sm:hidden">Nombre de la Zona</label>
+                        <input type="text" name="zone_name_${index}" value="${zone.name}" class="w-full bg-transparent outline-none font-bold" placeholder="Nombre de la zona">
+                    </div>
+                    <div class="w-full sm:w-40 flex items-center gap-2">
+                        <label class="block text-[10px] uppercase text-gray-500 sm:hidden">Precio $</label>
+                        <input type="number" name="zone_price_${index}" value="${zone.price}" class="w-full bg-transparent outline-none font-bold text-green-600" placeholder="Precio">
+                    </div>
+                    <button type="button" onclick="removeShippingZone(${index})" class="absolute top-2 right-2 sm:static text-red-500 p-2 hover:bg-red-500/10 rounded-lg transition-colors">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
                 `;
                 container.appendChild(div);
             });
@@ -1026,7 +1073,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ shippingZones: zones })
             });
-            if (res.ok) showToast('Zonas guardadas', success);
+            if (res.ok) showToast('Zonas guardadas', 'success');
         };
 
         // --- Notificaciones ---

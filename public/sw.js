@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mjfood-cache-v1-4';
+const CACHE_NAME = 'mjfood-cache-v1-5';
 const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [
@@ -56,6 +56,16 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
   
+  if (request.method !== 'GET') return;
+  if (
+    url.pathname.startsWith('/admin') || 
+    url.pathname.startsWith('/login') || 
+    url.pathname.startsWith('/api/') ||
+    url.pathname === '/logout'
+  ) {
+    return;
+  }
+  
   if (url.pathname === '/' || url.pathname === '/manifest.json') {
     event.respondWith(
       fetch(request)
@@ -78,21 +88,19 @@ self.addEventListener('fetch', (event) => {
   }
   
   event.respondWith(
-    caches.match(request, { ignoreSearch: true }).then((response) => {
-      if (response) {
-        return response;
+    caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
       }
 
       return fetch(request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'opaque')) {
           return response;
         }
 
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          if (request.method === 'GET') {
-            cache.put(request, responseToCache);
-          }
+          cache.put(request, responseToCache);
         });
 
         return response;

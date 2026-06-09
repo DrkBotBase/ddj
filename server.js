@@ -5,9 +5,12 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.set('trust proxy', 1);
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -19,7 +22,11 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'secret-key-123_mjfood',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/mjfood',
+        ttl: 7 * 24 * 60 * 60
+    }),
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
 }));
 
 const isAuthenticated = (req, res, next) => {
@@ -239,6 +246,7 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/login', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     if (req.session.authenticated) {
         return res.redirect('/admin');
     }
@@ -252,7 +260,13 @@ app.post('/login', (req, res) => {
 
     if (username === adminUser && password === adminPass) {
         req.session.authenticated = true;
-        res.redirect('/admin');
+        req.session.save((err) => {
+            if (err) {
+                console.error('Error saving session:', err);
+                return res.render('login', { error: 'Error de servidor' });
+            }
+            res.redirect('/admin');
+        });
     } else {
         res.render('login', { error: 'Usuario o contraseña incorrectos' });
     }
@@ -264,6 +278,7 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/admin', isAuthenticated, async (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const restaurantInfo = await RestaurantInfo.findOne();
     const categories = await MenuCategory.find().sort('order');
     res.render('admin', { restaurantInfo, categories });
@@ -300,6 +315,26 @@ app.post('/api/promotions', isAuthenticated, async (req, res) => {
         res.status(201).json(newPromo);
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error creating promotion' });
+    }
+});
+
+app.put('/api/promotions/:id', isAuthenticated, async (req, res) => {
+    try {
+        const promoData = { ...req.body };
+        
+        if (promoData.duration && parseInt(promoData.duration) > 0) {
+            const expiresAt = new Date();
+            expiresAt.setMinutes(expiresAt.getMinutes() + parseInt(promoData.duration));
+            promoData.expiresAt = expiresAt;
+        } else if (promoData.duration === null) {
+            promoData.$unset = { expiresAt: 1 };
+            delete promoData.expiresAt;
+        }
+
+        const updatedPromo = await Promotion.findByIdAndUpdate(req.params.id, promoData, { new: true });
+        res.json(updatedPromo);
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error updating promotion' });
     }
 });
 
@@ -539,6 +574,18 @@ app.post('/api/orders', async (req, res) => {
             const myName = restaurantInfo ? restaurantInfo.config.nombre : "MJFOOD";
             const myPhone = restaurantInfo ? restaurantInfo.config.telefonoWhatsApp : "573046793853";
 
+            const ua = req.get('user-agent') || '';
+            let detectedOS = "PC";
+            let detectedPlatform = "Web";
+
+            if (/android/i.test(ua)) {
+                detectedOS = "Android";
+                detectedPlatform = "App";
+            } else if (/iphone|ipad|ipod/i.test(ua)) {
+                detectedOS = "iOS";
+                detectedPlatform = "App";
+            }
+
             for (const key in restaurantOrders) {
                 const { id_companie, id_point, externalCart } = restaurantOrders[key];
                 const externalTotal = externalCart.reduce((sum, item) => sum + (item.valor * item.cantidad), 0);
@@ -553,7 +600,7 @@ app.post('/api/orders', async (req, res) => {
                     email: null,
                     barrio: "",
                     telefono: myPhone,
-                    direccion: "Recoger en local - MJFOOD",
+                    direccion: "Recoger - MJFOOD",
                     nombre_mesero: "",
                     comentario: `Ref: ${shortId} | Obs: ${comments || "Sin observaciones"}`,
                     id_companie: id_companie,
@@ -574,7 +621,7 @@ app.post('/api/orders', async (req, res) => {
                     cart: JSON.stringify(externalCart),
                     estado_domicilio: true,
                     total: externalTotal,
-                    os: "Server-Bridge",
+                    os: detectedOS,
                     entrega: "",
                     priority_shipping: false,
                     value_priority_shipping: null,
@@ -582,12 +629,11 @@ app.post('/api/orders', async (req, res) => {
                     bank_type: 0,
                     incremento_datafono: 0,
                     mesa_domicilio: false,
-                    platform: "App",
+                    platform: detectedPlatform,
                     valHowPay: "0"
                 };
 
                 await axios.post('https://back.vinapp.co/api/order/save-order-end', externalOrderData);
-                console.log(`External order for restaurant ${key} sent successfully`);
             }
         } catch (bridgeError) {
             console.error('Error in Bridge Automation:', bridgeError.response ? bridgeError.response.data : bridgeError.message);

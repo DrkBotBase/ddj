@@ -203,9 +203,84 @@
             font-size: 0.85rem;
             font-weight: 500;
         }
+
+        /* Full Screen Loader styles */
+        #loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            overflow: hidden;
+        }
+        .loader-side {
+            width: 50%;
+            height: 100%;
+            background-color: #ffd422;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #loader-left { transform: translateX(0); }
+        #loader-right { transform: translateX(0); }
+        
+        .loader-finished #loader-left { transform: translateX(-100%); }
+        .loader-finished #loader-right { transform: translateX(100%); }
+        
+        #loader-logo-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10001;
+            transition: opacity 0.4s ease-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .loader-finished #loader-logo-container { opacity: 0; pointer-events: none; }
+    </style>
+    <style>
+      .loader {
+        width: 100px;
+        aspect-ratio: 1;
+        display: grid;
+      }
+      .loader::before,
+      .loader::after {    
+        content:"";
+        grid-area: 1/1;
+        --c:no-repeat radial-gradient(farthest-side,#e21c1bff 60%,#0000);
+        background: 
+          var(--c) 50%  0, 
+          var(--c) 50%  100%, 
+          var(--c) 100% 50%, 
+          var(--c) 0    50%;
+        background-size: 20px 20px;
+        animation: l12 1s infinite;
+      }
+      .loader::before {
+        margin: 4px;
+        filter: hue-rotate(45deg);
+        background-size: 8px 8px;
+        animation-timing-function: linear
+      }
+      
+      @keyframes l12 { 
+        100%{transform: rotate(.5turn)}
+      }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased overflow-hidden">
+    <!-- Loader -->
+    <div id="loader-wrapper">
+        <div id="loader-left" class="loader-side"></div>
+        <div id="loader-right" class="loader-side"></div>
+        <div id="loader-logo-container">
+          <div class="loader"></div>
+        </div>
+    </div>
+
     <div class="fixed top-4 right-4 z-50">
         <button id="cart-button" class="neumorphic-button p-4 rounded-full relative">
             <i data-lucide="shopping-cart" class="w-6 h-6"></i>
@@ -264,7 +339,6 @@
     </footer>
     
     <!-- MODALES -->
-    
     <div id="item-modal-overlay" class="modal-overlay"></div>
     <div id="item-modal" class="modal-content neumorphic-flat rounded-2xl w-11/12 max-w-md">
         <div class="p-6 border-b border-[var(--dark-shadow)] flex justify-between items-center">
@@ -309,14 +383,17 @@
                 <input type="text" id="client-address" placeholder="Dirección de entrega *" class="neumorphic-input p-3 rounded-lg text-sm text-color md:col-span-2">
                 <select id="shipping-zone" class="neumorphic-input p-3 rounded-lg text-sm text-color md:col-span-2"></select>
                 
-                <div class="md:col-span-2">
+                <div id="payment-methods-section" class="md:col-span-2 hidden">
                     <h5 class="font-semibold mb-2 text-sm">Forma de Pago *</h5>
-                    <div class="flex gap-6 mt-1">
+                    <div class="flex flex-wrap gap-6 mt-1">
                         <label class="flex items-center gap-2 cursor-pointer text-sm">
                             <input type="radio" name="payment" value="efectivo" class="accent-lime-500 w-4 h-4"> Efectivo
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer text-sm">
                             <input type="radio" name="payment" value="transferencia" class="accent-lime-500 w-4 h-4"> Transferencia
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm">
+                            <input type="radio" name="payment" value="multipago" class="accent-lime-500 w-4 h-4"> Multipago
                         </label>
                     </div>
                 </div>
@@ -325,6 +402,21 @@
                     <input type="number" id="payment-cash-amount" placeholder="¿Con cuánto pagas? (Para llevarte cambio)" class="w-full neumorphic-input p-3 rounded-lg text-sm text-color">
                 </div>
                 <div id="transferencia-details" class="payment-details md:col-span-2 neumorphic-pressed p-4 rounded-lg text-xs leading-relaxed text-gray-300"></div>
+                <div id="multipago-details" class="payment-details md:col-span-2 space-y-3">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-1">MONTO EFECTIVO</label>
+                            <input type="number" id="multipago-cash" placeholder="$0" class="w-full neumorphic-input p-3 rounded-lg text-sm text-color">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-1">MONTO TRANSFERENCIA</label>
+                            <input type="number" id="multipago-transfer" placeholder="$0" class="w-full neumorphic-input p-3 rounded-lg text-sm text-color">
+                        </div>
+                    </div>
+                    <div class="neumorphic-pressed p-3 rounded-lg text-[10px] leading-relaxed text-gray-400">
+                        Indica cuánto pagarás en cada medio. La suma debe coincidir con el total.
+                    </div>
+                </div>
                 
                 <textarea id="order-comments" class="md:col-span-2 neumorphic-input rounded-lg p-3 h-20 text-sm text-color" placeholder="Ej: Tocar timbre, llamar..."></textarea>
             </div>
@@ -403,6 +495,21 @@
 
         window.dbPromotions = <%- JSON.stringify(dbPromotions) %>;
         window.restaurantData = <%- JSON.stringify(restaurantData) %>;
+
+        // --- Loader ---
+        const loaderWrapper = document.getElementById('loader-wrapper');
+        const loaderLogo = document.getElementById('loader-logo');
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                loaderWrapper.classList.add('loader-finished');
+                document.body.classList.remove('overflow-hidden');
+                setTimeout(() => {
+                    loaderWrapper.style.display = 'none';
+                }, 1000);
+            }, 1500);
+        });
+
         const VAPID_PUBLIC_KEY = '<%= vapidPublicKey %>';
         
         let cart = [];
@@ -889,6 +996,8 @@
           const clientAddress = document.getElementById('client-address').value.trim();  
           const paymentMethod = document.querySelector('input[name="payment"]:checked').value;  
           const cashAmount = document.getElementById('payment-cash-amount').value.trim();  
+          const multiCash = document.getElementById('multipago-cash').value.trim();
+          const multiTransfer = document.getElementById('multipago-transfer').value.trim();
           const comments = document.getElementById('order-comments').value.trim();  
           
           const zoneInfo = getCurrentZoneInfo();
@@ -916,21 +1025,13 @@
       
           if (paymentMethod === 'efectivo' && cashAmount) {
               message += `💸 *Paga con:* $${parseInt(cashAmount).toLocaleString()} (Llevar cambio)\n`;
+          } else if (paymentMethod === 'multipago') {
+              message += `🤝 *Distribución:* Efectivo ($${parseInt(multiCash || 0).toLocaleString()}) + Transferencia ($${parseInt(multiTransfer || 0).toLocaleString()})\n`;
           }
       
           if (comments) {
               message += `\n🗒️ *Notas adicionales:* ${comments}\n`;
           }
-          
-          // BLOQUE 2: GUÍA DE PREPARACIÓN DE COCINA PARA MARCIO (HACK DE MENÚ)
-          /*message += `\n─────────────────────\n`;
-          message += `🚨 *INSTRUCCIONES PARA LA COCINA:* \n`;
-          cart.forEach((item) => {
-              message += `• *Preparar:* ${item.quantity}x _${item.kitchenGuide}_\n`;
-              if (item.instructions && item.instructions.trim() !== '') {
-                  message += `  (Nota cocina: "${item.instructions}")\n`;
-              }
-          });*/
           
           message += `\n🕒 _Pedido generado desde el portal digital de MJFOOD_`;
       
@@ -983,10 +1084,60 @@
             checkLikeStatus();
             checkNotificationPrompt();
             
+            const multiCashInput = document.getElementById('multipago-cash');
+            const multiTransferInput = document.getElementById('multipago-transfer');
+
             cartModal.shippingZoneSelect.addEventListener('change', () => {
                 updateCartSummary();
+                if (cartModal.shippingZoneSelect.value !== "") {
+                    document.getElementById('payment-methods-section').classList.remove('hidden');
+                }
+
+                const paymentMethod = document.querySelector('input[name="payment"]:checked');
+                if (paymentMethod && paymentMethod.value === 'multipago') {
+                    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                    const shippingCost = calculateShippingCost();
+                    const total = subtotal + shippingCost;
+                    
+                    const currentCash = parseFloat(multiCashInput.value) || 0;
+                    if (multiCashInput.value !== "" || multiTransferInput.value !== "") {
+                        if (currentCash <= total) {
+                            multiTransferInput.value = total - currentCash;
+                        } else {
+                            multiCashInput.value = total;
+                            multiTransferInput.value = 0;
+                        }
+                        showToast('Zona cambiada: Revisa los montos de pago.', 'info');
+                    }
+                }
             });
-            
+
+            multiCashInput.addEventListener('input', () => {
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const shippingCost = calculateShippingCost();
+                const total = subtotal + shippingCost;
+                const cashVal = parseFloat(multiCashInput.value) || 0;
+                
+                if (cashVal <= total) {
+                    multiTransferInput.value = total - cashVal;
+                } else {
+                    multiTransferInput.value = 0;
+                }
+            });
+
+            multiTransferInput.addEventListener('input', () => {
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const shippingCost = calculateShippingCost();
+                const total = subtotal + shippingCost;
+                const transferVal = parseFloat(multiTransferInput.value) || 0;
+                
+                if (transferVal <= total) {
+                    multiCashInput.value = total - transferVal;
+                } else {
+                    multiCashInput.value = 0;
+                }
+            });
+
             document.body.addEventListener('click', async e => {
                 const header = e.target.closest('.category-header');
                 if (header) {
@@ -1013,6 +1164,7 @@
 
             cartModal.confirmBtn.addEventListener('click', async () => {
               if (validateCartForm()) {
+                const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
                 const orderData = {
                     clientName: document.getElementById('client-name').value.trim(),
                     clientPhone: document.getElementById('client-phone').value.trim(),
@@ -1026,8 +1178,9 @@
                     subtotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
                     shippingCost: calculateShippingCost(),
                     total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + calculateShippingCost(),
-                    paymentMethod: document.querySelector('input[name="payment"]:checked').value,
-                    cashAmount: document.getElementById('payment-cash-amount').value.trim() || 0,
+                    paymentMethod: paymentMethod,
+                    cashAmount: (paymentMethod === 'multipago' ? document.getElementById('multipago-cash').value.trim() : document.getElementById('payment-cash-amount').value.trim()) || 0,
+                    transferAmount: (paymentMethod === 'multipago' ? document.getElementById('multipago-transfer').value.trim() : 0) || 0,
                     comments: document.getElementById('order-comments').value.trim()
                 };
 
@@ -1048,8 +1201,11 @@
 
                         document.getElementById('order-comments').value = '';
                         document.getElementById('payment-cash-amount').value = '';
+                        document.getElementById('multipago-cash').value = '';
+                        document.getElementById('multipago-transfer').value = '';
                         document.getElementById('efectivo-details').style.display = 'none';
                         document.getElementById('transferencia-details').style.display = 'none';
+                        document.getElementById('multipago-details').style.display = 'none';
 
                         const checkedPayment = document.querySelector('input[name="payment"]:checked');
                         if (checkedPayment) checkedPayment.checked = false;
@@ -1132,6 +1288,9 @@
 
                     document.getElementById('transferencia-details').style.display =
                         e.target.value === 'transferencia' ? 'block' : 'none';
+
+                    document.getElementById('multipago-details').style.display =
+                        e.target.value === 'multipago' ? 'block' : 'none';
                 });
             });
         });
