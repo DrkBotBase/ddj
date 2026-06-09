@@ -442,7 +442,6 @@ app.post('/api/notifications/subscribe', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid subscription data' });
         }
 
-        // Limpiar espacios en blanco
         endpoint = endpoint.trim();
         keys.p256dh = keys.p256dh.trim();
         keys.auth = keys.auth.trim();

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mjfood-cache-v3';
+const CACHE_NAME = 'mjfood-cache-v4.1';
 const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [
@@ -12,24 +12,14 @@ const ASSETS_TO_CACHE = [
   'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp'
 ];
 
+// Instalación: Cachear archivos estáticos
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('Installing Service Worker and caching assets');
-      const cachePromises = ASSETS_TO_CACHE.map(url => {
-        return fetch(url, { mode: url.includes('http') ? 'no-cors' : 'same-origin' })
-          .then(response => {
-            if (response.status === 200 || response.type === 'opaque') {
-              return cache.put(url, response);
-            }
-            return Promise.resolve();
-          })
-          .catch(err => {
-            console.warn('Fallo al cachear:', url, err);
-            return Promise.resolve();
-          });
+      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
+        console.warn('Algunos recursos no se pudieron cachear proactivamente:', err);
       });
-      return Promise.all(cachePromises);
     })
   );
   self.skipWaiting();
@@ -52,11 +42,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Estrategia: Cache First con fallback a Network y Cacheo Dinámico
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
   
   if (request.method !== 'GET') return;
+
+  // No cachear panel de admin ni APIs
   if (
     url.pathname.startsWith('/admin') || 
     url.pathname.startsWith('/login') || 
@@ -66,27 +59,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Para la página principal y el manifest, siempre intentar red primero para tener lo último
   if (url.pathname === '/' || url.pathname === '/manifest.json') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-          }
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
           return response;
         })
         .catch(() => {
-          return caches.match(request, { ignoreSearch: true }).then(cachedResponse => {
-            return cachedResponse || caches.match(rutaBase);
-          });
+          return caches.match(request, { ignoreSearch: true });
         })
     );
     return;
   }
   
+  // Para el resto (Fuentes, CSS, Imágenes), Cache First
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
@@ -94,7 +85,8 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(request).then((response) => {
-        if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'opaque')) {
+        // Cachear solo si la respuesta es válida
+        if (!response || response.status !== 200) {
           return response;
         }
 
@@ -105,6 +97,7 @@ self.addEventListener('fetch', (event) => {
 
         return response;
       }).catch(() => {
+        // Fallback para navegación offline
         if (request.mode === 'navigate') {
           return caches.match(rutaBase);
         }
