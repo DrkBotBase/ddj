@@ -1329,7 +1329,7 @@
 
         async function checkNotificationPrompt() {
             if ('Notification' in window && Notification.permission === 'default') {
-                if (!sessionStorage.getItem('notif_dismissed')) {
+                if (!localStorage.getItem('notif_dismissed') && !localStorage.getItem('notif_subscribed')) {
                     setTimeout(() => {
                         notifBanner.classList.remove('hidden');
                         setTimeout(() => notifBanner.classList.add('active'), 100);
@@ -1347,12 +1347,13 @@
                 }
             } else {
                 notifBanner.classList.remove('active');
+                localStorage.setItem('notif_dismissed', 'true');
             }
         });
 
         document.getElementById('notif-dismiss-btn').addEventListener('click', () => {
             notifBanner.classList.remove('active');
-            sessionStorage.setItem('notif_dismissed', 'true');
+            localStorage.setItem('notif_dismissed', 'true');
         });
 
         if ('serviceWorker' in navigator) {
@@ -1367,10 +1368,29 @@
             });
         }
 
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('push_device_id');
+            if (!deviceId) {
+                deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+                localStorage.setItem('push_device_id', deviceId);
+            }
+            return deviceId;
+        }
+
         async function subscribeUser(registration) {
             try {
                 const existingSubscription = await registration.pushManager.getSubscription();
-                if (existingSubscription) return;
+                if (existingSubscription) {
+                    localStorage.setItem('notif_subscribed', 'true');
+                    const subscriptionData = JSON.parse(JSON.stringify(existingSubscription));
+                    subscriptionData.deviceId = getDeviceId();
+                    await fetch('/api/notifications/subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(subscriptionData)
+                    });
+                    return;
+                }
 
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') return;
@@ -1380,12 +1400,16 @@
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                 });
 
+                const subscriptionData = JSON.parse(JSON.stringify(subscription));
+                subscriptionData.deviceId = getDeviceId();
+
                 await fetch('/api/notifications/subscribe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(subscription)
+                    body: JSON.stringify(subscriptionData)
                 });
 
+                localStorage.setItem('notif_subscribed', 'true');
                 console.log('User subscribed for push notifications');
             } catch (error) {
                 console.error('Failed to subscribe user:', error);

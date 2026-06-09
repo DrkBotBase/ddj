@@ -433,10 +433,13 @@ app.delete('/api/admin/orders/:id', isAuthenticated, async (req, res) => {
 
 app.post('/api/notifications/subscribe', async (req, res) => {
     try {
-        const subscription = req.body;
+        const { deviceId, ...subscription } = req.body;
+        
+        const filter = deviceId ? { deviceId } : { endpoint: subscription.endpoint };
+        
         await Subscription.findOneAndUpdate(
-            { endpoint: subscription.endpoint },
-            subscription,
+            filter,
+            { ...subscription, deviceId },
             { upsert: true, returnDocument: 'after' }
         );
         res.status(201).json({ success: true });
