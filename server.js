@@ -433,15 +433,32 @@ app.delete('/api/admin/orders/:id', isAuthenticated, async (req, res) => {
 
 app.post('/api/notifications/subscribe', async (req, res) => {
     try {
-        const { deviceId, ...subscription } = req.body;
+        const { deviceId, endpoint, keys } = req.body;
         
-        const filter = deviceId ? { deviceId } : { endpoint: subscription.endpoint };
+        if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+            console.error('Invalid subscription received:', req.body);
+            return res.status(400).json({ success: false, message: 'Invalid subscription data' });
+        }
+
+        console.log(`Subscribing device: ${deviceId || 'unknown'} with endpoint: ${endpoint}`);
         
-        await Subscription.findOneAndUpdate(
+        const filter = deviceId ? { deviceId } : { endpoint };
+        const update = {
+            endpoint,
+            keys: {
+                p256dh: keys.p256dh,
+                auth: keys.auth
+            },
+            deviceId
+        };
+
+        const result = await Subscription.findOneAndUpdate(
             filter,
-            { ...subscription, deviceId },
-            { upsert: true, returnDocument: 'after' }
+            update,
+            { upsert: true, new: true }
         );
+        
+        console.log('Subscription saved/updated successfully:', result._id);
         res.status(201).json({ success: true });
     } catch (error) {
         console.error('Error saving subscription:', error);
@@ -460,12 +477,23 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
 
     try {
         const subscriptions = await Subscription.find();
+        console.log(`Sending notifications to ${subscriptions.length} subscribers`);
+        
         const notifications = subscriptions.map(sub => {
-            return webpush.sendNotification(sub, payload).catch(error => {
+            const pushSubscription = {
+                endpoint: sub.endpoint,
+                keys: {
+                    p256dh: sub.keys.p256dh,
+                    auth: sub.keys.auth
+                }
+            };
+
+            return webpush.sendNotification(pushSubscription, payload).catch(error => {
+                console.error(`Error sending to ${sub.endpoint}:`, error.statusCode, error.message);
                 if (error.statusCode === 410 || error.statusCode === 404) {
+                    console.log(`Deleting invalid subscription: ${sub._id}`);
                     return Subscription.deleteOne({ _id: sub._id });
                 }
-                console.error('Error sending notification:', error);
             });
         });
 

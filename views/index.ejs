@@ -1382,7 +1382,7 @@
                 const existingSubscription = await registration.pushManager.getSubscription();
                 if (existingSubscription) {
                     localStorage.setItem('notif_subscribed', 'true');
-                    const subscriptionData = JSON.parse(JSON.stringify(existingSubscription));
+                    const subscriptionData = existingSubscription.toJSON();
                     subscriptionData.deviceId = getDeviceId();
                     await fetch('/api/notifications/subscribe', {
                         method: 'POST',
@@ -1400,7 +1400,7 @@
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                 });
 
-                const subscriptionData = JSON.parse(JSON.stringify(subscription));
+                const subscriptionData = subscription.toJSON();
                 subscriptionData.deviceId = getDeviceId();
 
                 await fetch('/api/notifications/subscribe', {
