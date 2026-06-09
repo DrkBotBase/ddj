@@ -1379,8 +1379,19 @@
 
         async function subscribeUser(registration) {
             try {
+                const currentVapidKey = VAPID_PUBLIC_KEY;
+                const savedVapidKey = localStorage.getItem('last_vapid_key');
+                
                 const existingSubscription = await registration.pushManager.getSubscription();
-                if (existingSubscription) {
+                
+                // Si la llave VAPID cambió, forzamos desuscripción y resuscripción
+                if (existingSubscription && savedVapidKey !== currentVapidKey) {
+                    console.log('VAPID key changed, re-subscribing...');
+                    await existingSubscription.unsubscribe();
+                    localStorage.removeItem('notif_subscribed');
+                }
+
+                if (existingSubscription && savedVapidKey === currentVapidKey) {
                     localStorage.setItem('notif_subscribed', 'true');
                     const subscriptionData = existingSubscription.toJSON();
                     subscriptionData.deviceId = getDeviceId();
@@ -1402,6 +1413,7 @@
 
                 const subscriptionData = subscription.toJSON();
                 subscriptionData.deviceId = getDeviceId();
+                localStorage.setItem('last_vapid_key', VAPID_PUBLIC_KEY);
 
                 await fetch('/api/notifications/subscribe', {
                     method: 'POST',

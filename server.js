@@ -480,6 +480,11 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
         console.log(`Sending notifications to ${subscriptions.length} subscribers`);
         
         const notifications = subscriptions.map(sub => {
+            if (!sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
+                console.warn(`Skipping invalid subscription: ${sub._id}`);
+                return Promise.resolve();
+            }
+
             const pushSubscription = {
                 endpoint: sub.endpoint,
                 keys: {
@@ -488,13 +493,25 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
                 }
             };
 
-            return webpush.sendNotification(pushSubscription, payload).catch(error => {
-                console.error(`Error sending to ${sub.endpoint}:`, error.statusCode, error.message);
-                if (error.statusCode === 410 || error.statusCode === 404) {
-                    console.log(`Deleting invalid subscription: ${sub._id}`);
-                    return Subscription.deleteOne({ _id: sub._id });
-                }
-            });
+            return webpush.sendNotification(pushSubscription, payload)
+                .then(() => console.log(`Notification sent to ${sub.endpoint}`))
+                .catch(error => {
+                    console.error(`Error sending to ${sub.endpoint}:`, {
+                        statusCode: error.statusCode,
+                        message: error.message,
+                        body: error.body,
+                        endpoint: sub.endpoint
+                    });
+                    
+                    // Solo eliminar si estamos seguros de que es 410 o 404
+                    // Pero por ahora lo comentamos para que el usuario pueda ver el error en consola
+                    /*
+                    if (error.statusCode === 410 || error.statusCode === 404) {
+                        console.log(`Marking invalid subscription for deletion: ${sub._id}`);
+                        return Subscription.deleteOne({ _id: sub._id });
+                    }
+                    */
+                });
         });
 
         await Promise.all(notifications);
