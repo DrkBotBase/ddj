@@ -1378,20 +1378,22 @@
         }
 
         async function subscribeUser(registration, force = false) {
+            console.log('Push subscription attempt. Force:', force);
             try {
                 const currentVapidKey = VAPID_PUBLIC_KEY;
                 const savedVapidKey = localStorage.getItem('last_vapid_key');
                 
                 let existingSubscription = await registration.pushManager.getSubscription();
                 
-                // Si forzamos o si la llave VAPID cambió, desuscribimos primero
                 if (existingSubscription && (force || savedVapidKey !== currentVapidKey)) {
-                    console.log('Refreshing subscription...');
+                    console.log('Force reset or VAPID mismatch. Unsubscribing...');
                     await existingSubscription.unsubscribe();
                     existingSubscription = null;
+                    localStorage.removeItem('notif_subscribed');
                 }
 
                 if (existingSubscription) {
+                    console.log('Existing subscription valid. Syncing with server...');
                     localStorage.setItem('notif_subscribed', 'true');
                     const subscriptionData = existingSubscription.toJSON();
                     subscriptionData.deviceId = getDeviceId();
@@ -1404,28 +1406,37 @@
                 }
 
                 const permission = await Notification.requestPermission();
-                if (permission !== 'granted') return;
+                if (permission !== 'granted') {
+                    console.warn('Notification permission not granted');
+                    return;
+                }
 
+                console.log('Creating NEW subscription with VAPID:', currentVapidKey.trim().substring(0, 10) + '...');
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    applicationServerKey: urlBase64ToUint8Array(currentVapidKey.trim())
                 });
 
                 const subscriptionData = subscription.toJSON();
                 subscriptionData.deviceId = getDeviceId();
-                localStorage.setItem('last_vapid_key', VAPID_PUBLIC_KEY);
+                localStorage.setItem('last_vapid_key', currentVapidKey);
 
-                await fetch('/api/notifications/subscribe', {
+                const response = await fetch('/api/notifications/subscribe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(subscriptionData)
                 });
 
-                localStorage.setItem('notif_subscribed', 'true');
-                console.log('User subscribed for push notifications');
-                showToast('¡Notificaciones activadas!', 'success');
+                if (response.ok) {
+                    localStorage.setItem('notif_subscribed', 'true');
+                    console.log('New subscription saved successfully');
+                    showToast('¡Notificaciones activadas!', 'success');
+                } else {
+                    console.error('Server failed to save subscription');
+                }
             } catch (error) {
                 console.error('Failed to subscribe user:', error);
+                showToast('Error al activar notificaciones', 'error');
             }
         }
 

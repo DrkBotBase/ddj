@@ -56,6 +56,8 @@ webpush.setVapidDetails(
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
 );
+console.log('VAPID details set with public key:', process.env.VAPID_PUBLIC_KEY ? 'Present' : 'MISSING');
+console.log('VAPID private key:', process.env.VAPID_PRIVATE_KEY ? 'Present' : 'MISSING');
 
 async function seedDefaultData() {
     try {
@@ -483,6 +485,7 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
     try {
         const subscriptions = await Subscription.find();
         console.log(`Sending notifications to ${subscriptions.length} subscribers`);
+        console.log('Using VAPID Public Key:', process.env.VAPID_PUBLIC_KEY ? process.env.VAPID_PUBLIC_KEY.substring(0, 10) + '...' : 'MISSING');
         
         const notifications = subscriptions.map(sub => {
             if (!sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
@@ -498,7 +501,15 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
                 }
             };
 
-            return webpush.sendNotification(pushSubscription, payload)
+            const options = {
+                vapidDetails: {
+                    subject: process.env.VAPID_EMAIL || 'mailto:admin@example.com',
+                    publicKey: process.env.VAPID_PUBLIC_KEY.trim(),
+                    privateKey: process.env.VAPID_PRIVATE_KEY.trim()
+                }
+            };
+
+            return webpush.sendNotification(pushSubscription, payload, options)
                 .then(() => console.log(`Notification sent to ${sub.endpoint}`))
                 .catch(error => {
                     console.error(`Error sending to ${sub.endpoint}:`, {
