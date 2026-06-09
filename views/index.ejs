@@ -1377,16 +1377,22 @@
             return deviceId;
         }
 
+        function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
+        }
+
         async function subscribeUser(registration, force = false) {
-            console.log('Push subscription attempt. Force:', force);
+            console.log('Push subscription attempt. Force:', force, 'PWA Mode:', isPWA());
             try {
                 const currentVapidKey = VAPID_PUBLIC_KEY;
                 const savedVapidKey = localStorage.getItem('last_vapid_key');
+                const lastEnv = localStorage.getItem('last_env');
+                const currentEnv = isPWA() ? 'pwa' : 'browser';
                 
                 let existingSubscription = await registration.pushManager.getSubscription();
                 
-                if (existingSubscription && (force || savedVapidKey !== currentVapidKey)) {
-                    console.log('Force reset or VAPID mismatch. Unsubscribing...');
+                if (existingSubscription && (force || savedVapidKey !== currentVapidKey || lastEnv !== currentEnv)) {
+                    console.log('Environment change or VAPID mismatch. Refreshing subscription...');
                     await existingSubscription.unsubscribe();
                     existingSubscription = null;
                     localStorage.removeItem('notif_subscribed');
@@ -1395,6 +1401,7 @@
                 if (existingSubscription) {
                     console.log('Existing subscription valid. Syncing with server...');
                     localStorage.setItem('notif_subscribed', 'true');
+                    localStorage.setItem('last_env', currentEnv);
                     const subscriptionData = existingSubscription.toJSON();
                     subscriptionData.deviceId = getDeviceId();
                     await fetch('/api/notifications/subscribe', {
@@ -1411,7 +1418,7 @@
                     return;
                 }
 
-                console.log('Creating NEW subscription with VAPID:', currentVapidKey.trim().substring(0, 10) + '...');
+                console.log('Creating NEW subscription for', currentEnv);
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(currentVapidKey.trim())
@@ -1420,6 +1427,7 @@
                 const subscriptionData = subscription.toJSON();
                 subscriptionData.deviceId = getDeviceId();
                 localStorage.setItem('last_vapid_key', currentVapidKey);
+                localStorage.setItem('last_env', currentEnv);
 
                 const response = await fetch('/api/notifications/subscribe', {
                     method: 'POST',
