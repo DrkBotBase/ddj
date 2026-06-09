@@ -1328,7 +1328,8 @@
         });
 
         async function checkNotificationPrompt() {
-            if ('Notification' in window && Notification.permission === 'default') {
+            // Solo mostrar si es PWA y no se ha suscrito/rechazado antes
+            if (isPWA() && 'Notification' in window && Notification.permission === 'default') {
                 if (!localStorage.getItem('notif_dismissed') && !localStorage.getItem('notif_subscribed')) {
                     setTimeout(() => {
                         notifBanner.classList.remove('hidden');
