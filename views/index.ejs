@@ -1343,7 +1343,7 @@
             if (permission === 'granted') {
                 notifBanner.classList.remove('active');
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.ready.then(reg => subscribeUser(reg));
+                    navigator.serviceWorker.ready.then(reg => subscribeUser(reg, true));
                 }
             } else {
                 notifBanner.classList.remove('active');
@@ -1377,21 +1377,21 @@
             return deviceId;
         }
 
-        async function subscribeUser(registration) {
+        async function subscribeUser(registration, force = false) {
             try {
                 const currentVapidKey = VAPID_PUBLIC_KEY;
                 const savedVapidKey = localStorage.getItem('last_vapid_key');
                 
-                const existingSubscription = await registration.pushManager.getSubscription();
+                let existingSubscription = await registration.pushManager.getSubscription();
                 
-                // Si la llave VAPID cambió, forzamos desuscripción y resuscripción
-                if (existingSubscription && savedVapidKey !== currentVapidKey) {
-                    console.log('VAPID key changed, re-subscribing...');
+                // Si forzamos o si la llave VAPID cambió, desuscribimos primero
+                if (existingSubscription && (force || savedVapidKey !== currentVapidKey)) {
+                    console.log('Refreshing subscription...');
                     await existingSubscription.unsubscribe();
-                    localStorage.removeItem('notif_subscribed');
+                    existingSubscription = null;
                 }
 
-                if (existingSubscription && savedVapidKey === currentVapidKey) {
+                if (existingSubscription) {
                     localStorage.setItem('notif_subscribed', 'true');
                     const subscriptionData = existingSubscription.toJSON();
                     subscriptionData.deviceId = getDeviceId();
@@ -1423,6 +1423,7 @@
 
                 localStorage.setItem('notif_subscribed', 'true');
                 console.log('User subscribed for push notifications');
+                showToast('¡Notificaciones activadas!', 'success');
             } catch (error) {
                 console.error('Failed to subscribe user:', error);
             }

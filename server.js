@@ -433,12 +433,17 @@ app.delete('/api/admin/orders/:id', isAuthenticated, async (req, res) => {
 
 app.post('/api/notifications/subscribe', async (req, res) => {
     try {
-        const { deviceId, endpoint, keys } = req.body;
+        let { deviceId, endpoint, keys } = req.body;
         
         if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
             console.error('Invalid subscription received:', req.body);
             return res.status(400).json({ success: false, message: 'Invalid subscription data' });
         }
+
+        // Limpiar espacios en blanco
+        endpoint = endpoint.trim();
+        keys.p256dh = keys.p256dh.trim();
+        keys.auth = keys.auth.trim();
 
         console.log(`Subscribing device: ${deviceId || 'unknown'} with endpoint: ${endpoint}`);
         
@@ -503,14 +508,10 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
                         endpoint: sub.endpoint
                     });
                     
-                    // Solo eliminar si estamos seguros de que es 410 o 404
-                    // Pero por ahora lo comentamos para que el usuario pueda ver el error en consola
-                    /*
                     if (error.statusCode === 410 || error.statusCode === 404) {
                         console.log(`Marking invalid subscription for deletion: ${sub._id}`);
                         return Subscription.deleteOne({ _id: sub._id });
                     }
-                    */
                 });
         });
 
