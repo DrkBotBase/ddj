@@ -473,11 +473,12 @@ app.post('/api/notifications/subscribe', async (req, res) => {
 });
 
 app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
-    const { title, body, url } = req.body;
+    const { title, body, url, image } = req.body;
     const payload = JSON.stringify({
         title: title || 'Novedades en MJFOOD',
         body: body || '¡Revisa nuestro nuevo menú!',
         icon: 'https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp',
+        image: image || null,
         data: { url: url || '/' }
     });
 

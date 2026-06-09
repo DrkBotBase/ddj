@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mjfood-cache-v4.1';
+const CACHE_NAME = 'mjfood-cache-v4.2';
 const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [
@@ -118,6 +118,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body,
     icon: data.icon || 'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp',
+    image: data.image || null,
     badge: 'https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp',
     data: data.data || { url: rutaBase }
   };
