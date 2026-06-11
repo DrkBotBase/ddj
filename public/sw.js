@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mjfood-cache-v4.2';
+const CACHE_NAME = 'mjfood-cache-v4.5';
 const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [
@@ -12,7 +12,6 @@ const ASSETS_TO_CACHE = [
   'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp'
 ];
 
-// Instalación: Cachear archivos estáticos
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -42,14 +41,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Estrategia: Cache First con fallback a Network y Cacheo Dinámico
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
   
   if (request.method !== 'GET') return;
-
-  // No cachear panel de admin ni APIs
+  
   if (
     url.pathname.startsWith('/admin') || 
     url.pathname.startsWith('/login') || 
@@ -59,7 +56,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Para la página principal y el manifest, siempre intentar red primero para tener lo último
   if (url.pathname === '/' || url.pathname === '/manifest.json') {
     event.respondWith(
       fetch(request)
@@ -77,7 +73,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Para el resto (Fuentes, CSS, Imágenes), Cache First
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
@@ -85,7 +80,6 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(request).then((response) => {
-        // Cachear solo si la respuesta es válida
         if (!response || response.status !== 200) {
           return response;
         }
@@ -97,7 +91,6 @@ self.addEventListener('fetch', (event) => {
 
         return response;
       }).catch(() => {
-        // Fallback para navegación offline
         if (request.mode === 'navigate') {
           return caches.match(rutaBase);
         }
@@ -117,7 +110,7 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: data.body,
-    icon: data.icon || 'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp',
+    icon: data.icon || '/assets/icon/144.png',
     image: data.image || null,
     badge: 'https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp',
     data: data.data || { url: rutaBase }

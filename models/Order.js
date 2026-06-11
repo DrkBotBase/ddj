@@ -9,7 +9,11 @@ const OrderSchema = new mongoose.Schema({
         name: String,
         quantity: Number,
         price: Number,
-        instructions: String
+        instructions: String,
+        adicionales: [{
+            name: String,
+            price: Number
+        }]
     }],
     subtotal: Number,
     shippingCost: Number,

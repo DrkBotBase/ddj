@@ -19,6 +19,11 @@ const menuItemSchema = new mongoose.Schema({
             valor: Number
         }]
     },
+    adicionales: [{
+        name: String,
+        price: Number,
+        type: { type: String, default: 'checkbox' }
+    }],
     active: { type: Boolean, default: true }
 });
 

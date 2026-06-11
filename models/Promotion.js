@@ -12,6 +12,11 @@ const promotionSchema = new mongoose.Schema({
         id_companie: Number,
         id_point: Number
     },
+    adicionales: [{
+        name: String,
+        price: Number,
+        type: { type: String, default: 'checkbox' }
+    }],
     active: { type: Boolean, default: true },
     expiresAt: { type: Date, index: { expires: 0 } },
     createdAt: { type: Date, default: Date.now }

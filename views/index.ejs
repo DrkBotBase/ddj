@@ -347,6 +347,11 @@
         </div>
         <div class="p-6">
             <p id="item-modal-desc" class="text-color text-sm leading-relaxed mb-4"></p>
+            
+            <div id="item-adicionales-container" class="mb-4 space-y-2">
+                <!-- Adicionales se cargarán aquí -->
+            </div>
+
             <div class="mt-4">
                 <label class="font-semibold mb-2 block text-sm">¿Cómo lo quieres?</label>
                 <textarea id="item-modal-instructions" class="w-full neumorphic-input rounded-lg p-3 h-20 text-sm text-color" placeholder="Instrucciones opcionales..."></textarea>
@@ -667,11 +672,12 @@
             container.innerHTML = '';
 
             staticPromos.forEach(promo => {
-                const item = window.restaurantData.menu
+                const baseItem = window.restaurantData.menu
                     .flatMap(cat => cat.items)
                     .find(i => i.id === promo.itemId);
 
-                if (item) {
+                if (baseItem) {
+                    const item = { ...baseItem, isPromo: true };
                     renderPromoCard(item, promo.image, container);
                 }
             });
@@ -679,9 +685,12 @@
             dbPromos.forEach(promo => {
                 let item;
                 if (promo.itemId) {
-                    item = window.restaurantData.menu
+                    const baseItem = window.restaurantData.menu
                         .flatMap(cat => cat.items)
                         .find(i => i.id === promo.itemId);
+                    if (baseItem) {
+                        item = { ...baseItem, isPromo: true };
+                    }
                 } else {
                     item = {
                         id: promo._id,
@@ -689,6 +698,8 @@
                         description: promo.description,
                         basePrice: promo.basePrice,
                         image: promo.image,
+                        adicionales: promo.adicionales || [],
+                        isPromo: true,
                         kitchenGuide: `PROMO: ${promo.name}`
                     };
                 }
@@ -700,13 +711,20 @@
         }
 
         function renderPromoCard(item, imageUrl, container) {
+            const displayPrice = item.basePrice;
+            const priceText = displayPrice === 0 ? 'Ver precios' : `$${displayPrice.toLocaleString()}`;
+            
             const promoEl = document.createElement('div');
             promoEl.className = 'flex-shrink-0 w-64 h-40 md:w-80 md:h-48 rounded-2xl overflow-hidden snap-start cursor-pointer neumorphic-flat relative group';
             promoEl.innerHTML = `
                 <img src="${imageUrl}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
-                    <h3 class="text-color font-bold text-sm md:text-base line-clamp-1">${item.name}</h3>
-                    <p class="accent-text font-black text-lg">$${item.basePrice.toLocaleString()}</p>
+                <div class="absolute bottom-3 left-3">
+                    <div class="bg-[#ffd422] px-3 py-2 rounded-xl border border-[var(--light-shadow)] shadow-lg inline-block max-w-[180px] md:max-w-[220px]">
+                        <div class="flex flex-col gap-0">
+                            <h3 class="font-bold text-[var(--text-color)] text-[11px] md:text-xs line-clamp-1 leading-tight">${item.name}</h3>
+                            <p class="accent-text font-black text-sm md:text-base mt-0.5">${priceText}</p>
+                        </div>
+                    </div>
                 </div>
             `;
             promoEl.onclick = () => openItemModal(item);
@@ -750,14 +768,19 @@
         
         function updateStatusUI() {
             const statusDiv = document.getElementById('status-indicator');
+            const hasPromo = cart.some(item => item.isPromo);
+
             if (isOpen) {
                 statusDiv.textContent = 'Abierto'; statusDiv.className = 'status-indicator status-open';
                 cartModal.confirmBtn.disabled = false; cartModal.confirmBtn.textContent = 'Enviar Pedido por WhatsApp';
+            } else if (hasPromo) {
+                statusDiv.textContent = 'Cerrado (Promo Activa)'; statusDiv.className = 'status-indicator status-open';
+                cartModal.confirmBtn.disabled = false; cartModal.confirmBtn.textContent = 'Enviar Pedido (Promoción)';
             } else {
                 statusDiv.textContent = 'Cerrado'; statusDiv.className = 'status-indicator status-closed';
                 cartModal.confirmBtn.disabled = true; cartModal.confirmBtn.textContent = 'Cerrado por el momento';
             }
-            document.querySelectorAll('.select-item-btn').forEach(btn => { btn.style.display = isOpen ? 'block' : 'none'; });
+            // document.querySelectorAll('.select-item-btn').forEach(btn => { btn.style.display = isOpen ? 'block' : 'none'; });
         }
         
         function displayCurrentDate() {
@@ -800,6 +823,12 @@
         function calculateItemPrice() {
             if (!currentItem) return 0;
             let total = currentItem.basePrice;
+            
+            const selectedAds = document.querySelectorAll('.adicional-input:checked');
+            selectedAds.forEach(cb => {
+                total += parseFloat(cb.dataset.price);
+            });
+
             const quantity = parseInt(itemModal.qty.textContent);
             itemModal.price.textContent = `$${(total * quantity).toLocaleString()}`;
             return total;
@@ -811,6 +840,35 @@
             itemModal.desc.textContent = item.description; 
             itemModal.instructions.value = ''; 
             itemModal.qty.textContent = '1';
+            
+            const adsContainer = document.getElementById('item-adicionales-container');
+            adsContainer.innerHTML = '';
+            
+            if (item.adicionales && item.adicionales.length > 0) {
+                const title = document.createElement('label');
+                title.className = 'font-semibold mb-2 block text-sm';
+                title.textContent = 'Adicionales / Opciones';
+                adsContainer.appendChild(title);
+                
+                item.adicionales.forEach((ad, idx) => {
+                    const adEl = document.createElement('label');
+                    adEl.className = 'flex items-center justify-between p-3 neumorphic-pressed rounded-xl cursor-pointer hover:bg-white/5 transition-colors';
+                    
+                    const isRadio = ad.type === 'radio';
+                    const inputType = isRadio ? 'radio' : 'checkbox';
+                    const inputName = isRadio ? 'adicional-radio-group' : `adicional-checkbox-${idx}`;
+                    
+                    adEl.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <input type="${inputType}" name="${inputName}" class="adicional-input w-5 h-5 accent-lime-500" data-name="${ad.name}" data-price="${ad.price}" onchange="calculateItemPrice()">
+                            <span class="text-sm font-medium text-color">${ad.name}</span>
+                        </div>
+                        <span class="text-xs font-bold accent-text">+ $${ad.price.toLocaleString()}</span>
+                    `;
+                    adsContainer.appendChild(adEl);
+                });
+            }
+
             calculateItemPrice();
             toggleModal('item', true);
         }
@@ -818,28 +876,40 @@
         function addToCart() {
             if (!currentItem) return;
             
+            const radioInputs = document.querySelectorAll('.adicional-input[type="radio"]');
+            if (radioInputs.length > 0) {
+                const selectedRadio = document.querySelector('.adicional-input[type="radio"]:checked');
+                if (!selectedRadio) {
+                    showToast('Por favor selecciona una variante para continuar', 'error');
+                    return;
+                }
+            }
+
             const price = calculateItemPrice();
             const quantity = parseInt(itemModal.qty.textContent);
             const instructions = itemModal.instructions.value.trim();
             
-            const existingItem = cart.find(item =>
-                item.id === currentItem.id &&
-                item.instructions === instructions
-            );
-            
-            if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
-                cart.push({
-                    id: currentItem.id,
-                    cartId: Date.now(),
-                    name: currentItem.name,
-                    price: price,
-                    quantity: quantity,
-                    instructions: instructions,
-                    kitchenGuide: currentItem.kitchenGuide || `${currentItem.name} (Eje del local)`
+            const adicionales = [];
+            document.querySelectorAll('.adicional-input:checked').forEach(cb => {
+                adicionales.push({
+                    name: cb.dataset.name,
+                    price: parseFloat(cb.dataset.price)
                 });
-            }
+            });
+
+            const cartId = String(Date.now() + Math.random());
+
+            cart.push({
+                id: currentItem.id,
+                cartId: cartId,
+                name: currentItem.name,
+                price: price,
+                quantity: quantity,
+                isPromo: currentItem.isPromo || false,
+                instructions: instructions,
+                adicionales: adicionales,
+                kitchenGuide: currentItem.kitchenGuide || `${currentItem.name} (Eje del local)`
+            });
             
             renderCart();
             toggleModal('item', false);
@@ -869,6 +939,11 @@
                 itemEl.innerHTML = `
                     <div class="max-w-[80%]">
                         <p class="font-bold text-color text-sm md:text-base">${item.quantity} x ${item.name}</p>
+                        ${item.adicionales && item.adicionales.length > 0 ? `
+                            <p class="text-[10px] text-gray-400">
+                                + ${item.adicionales.map(a => a.name).join(', ')}
+                            </p>
+                        ` : ''}
                         ${item.instructions ? `<p class="text-xs text-color italic mt-0.5">Nota: "${item.instructions}"</p>` : ''}
                         <p class="text-sm font-semibold accent-text mt-1">${formatCOP(totalItem)}</p>
                     </div>
@@ -881,6 +956,7 @@
         
             lucide.createIcons();
             updateCartSummary();
+            updateStatusUI();
         }
         
         function updateCartSummary() {
@@ -934,13 +1010,14 @@
                         <div class="space-y-4">
                         ${cat.items.map(item => {
                             const displayPrice = item.basePrice;
+                            const priceText = displayPrice === 0 ? 'Ver precios' : `$${displayPrice.toLocaleString()}`;
                             return `
                                 <div class="neumorphic-pressed rounded-2xl p-4 flex items-center gap-4 hover:border hover:border-lime-500/20 transition-all">
                                   <!--<img src="${item.image || window.restaurantData.config.logoUrl || '/assets/banner.jpg'}" alt="${item.name}" class="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg flex-shrink-0">-->
                                     <div class="flex-grow">
                                         <h3 class="text-base md:text-lg font-bold text-color">${item.name}</h3>
                                         <p class="text-xs text-gray-400 my-1 leading-relaxed">${item.description}</p>
-                                        <p class="text-md md:text-lg font-black accent-text mt-2">$${displayPrice.toLocaleString()}</p>
+                                        <p class="text-md md:text-lg font-black accent-text mt-2">${priceText}</p>
                                     </div>
                                     <div class="flex-shrink-0">
                                         <button class="select-item-btn neumorphic-button text-black font-bold p-3 rounded-xl hover:scale-105 active:scale-95 transition flex items-center justify-center" style="background-color: var(--primary-color);" data-id="${item.id}">
@@ -1013,6 +1090,11 @@
           message += `🧾 *DETALLE DEL PEDIDO:*\n`;
           cart.forEach((item, i) => {
             message += `${i + 1}. *${item.name}* (x${item.quantity}) - $${(item.price * item.quantity).toLocaleString()}\n`;
+            if (item.adicionales && item.adicionales.length > 0) {
+              item.adicionales.forEach(ad => {
+                message += `   + ${ad.name} ($${ad.price.toLocaleString()})\n`;
+              });
+            }
             if (item.instructions && item.instructions.trim() !== '') {
               message += `   _Nota: "${item.instructions}"_\n`;
             }
@@ -1173,7 +1255,8 @@
                         name: item.name,
                         quantity: item.quantity,
                         price: item.price,
-                        instructions: item.instructions
+                        instructions: item.instructions,
+                        adicionales: item.adicionales || []
                     })),
                     subtotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
                     shippingCost: calculateShippingCost(),
@@ -1275,8 +1358,8 @@
             cartModal.itemsContainer.addEventListener('click', e => {
                 const removeBtn = e.target.closest('.remove-btn');
                 if (removeBtn) {
-                    const cartId = parseInt(removeBtn.dataset.cartId);
-                    cart = cart.filter(item => item.cartId !== cartId);
+                    const cartId = removeBtn.dataset.cartId;
+                    cart = cart.filter(item => String(item.cartId) !== String(cartId));
                     renderCart();
                 }
             });
