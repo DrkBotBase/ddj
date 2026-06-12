@@ -755,6 +755,6 @@ app.post('/api/like', async (req, res) => {
     }
 });
 
-app.listen(PORT, '192.168.1.67', () => {
+app.listen(PORT, () => {
     console.log(`Server on port:${PORT}`);
 });
