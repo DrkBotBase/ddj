@@ -504,7 +504,11 @@
                                 </div>
                                 ${item.adicionales && item.adicionales.length > 0 ? `
                                     <div class="text-[10px] text-gray-400 pl-4">
-                                        + ${item.adicionales.map(a => `${a.name} ($${a.price.toLocaleString()})`).join(', ')}
+                                        + ${item.adicionales.map(a => {
+                                            let info = `${a.name} ($${a.price.toLocaleString()})`;
+                                            if (a.id_product) info += ` <span class="text-blue-500">[ID:${a.id_product}${a.id_companie ? ` C:${a.id_companie}` : ''}${a.id_point ? ` P:${a.id_point}` : ''}]</span>`;
+                                            return info;
+                                        }).join(', ')}
                                     </div>
                                 ` : ''}
                             `).join('')}
@@ -562,7 +566,11 @@
                                 </div>
                                 ${item.adicionales && item.adicionales.length > 0 ? `
                                     <div class="text-[10px] text-gray-400 pl-4">
-                                        ${item.adicionales.map(a => `+ ${a.name} ($${a.price.toLocaleString()})`).join('<br>')}
+                                        ${item.adicionales.map(a => {
+                                            let info = `+ ${a.name} ($${a.price.toLocaleString()})`;
+                                            if (a.id_product) info += ` <span class="text-blue-500 font-bold">[ID:${a.id_product}${a.id_companie ? ` C:${a.id_companie}` : ''}${a.id_point ? ` P:${a.id_point}` : ''}]</span>`;
+                                            return info;
+                                        }).join('<br>')}
                                     </div>
                                 ` : ''}
                                 ${item.instructions ? `<p class="text-[10px] italic text-gray-500 pl-4">"${item.instructions}"</p>` : ''}
@@ -685,22 +693,29 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        ${cat.items.map(item => `
-                            <div class="neumorphic-input rounded-xl p-4 flex justify-between items-center ${!item.active ? 'opacity-50' : ''}">
-                                <div>
-                                    <p class="font-bold text-sm">${item.name}</p>
-                                    <p class="text-xs text-gray-400">$${item.basePrice.toLocaleString()}</p>
+                        ${cat.items.map(item => {
+                            const defaultImg = 'https://raw.githubusercontent.com/DrkBotBase/delivery/refs/heads/master/public/assets/images/menu_logo.png';
+                            const imgUrl = item.image || defaultImg;
+                            return `
+                                <div class="neumorphic-input rounded-xl p-4 flex justify-between items-center ${!item.active ? 'opacity-50' : ''}">
+                                    <div class="flex items-center gap-3">
+                                        <img src="${imgUrl}" class="w-10 h-10 object-cover rounded-lg" onerror="this.src='${defaultImg}'">
+                                        <div>
+                                            <p class="font-bold text-sm">${item.name}</p>
+                                            <p class="text-xs text-gray-400">$${item.basePrice.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="editItem('${cat._id}', '${item._id}')" class="p-2 neumorphic-button rounded-lg">
+                                            <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                        </button>
+                                        <button onclick="deleteItem('${cat._id}', '${item._id}')" class="p-2 neumorphic-button rounded-lg text-red-500">
+                                            <i data-lucide="x" class="w-3 h-3"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="flex gap-2">
-                                    <button onclick="editItem('${cat._id}', '${item._id}')" class="p-2 neumorphic-button rounded-lg">
-                                        <i data-lucide="edit-3" class="w-3 h-3"></i>
-                                    </button>
-                                    <button onclick="deleteItem('${cat._id}', '${item._id}')" class="p-2 neumorphic-button rounded-lg text-red-500">
-                                        <i data-lucide="x" class="w-3 h-3"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 `;
                 container.appendChild(catEl);
@@ -754,12 +769,15 @@
             const row = document.createElement('div');
             row.className = 'flex flex-wrap gap-2 adicional-row neumorphic-pressed p-2 rounded-lg';
             row.innerHTML = `
-                <input type="text" placeholder="Nombre (ej: Combo)" value="${ad ? ad.name : ''}" class="flex-grow neumorphic-input p-2 rounded-lg text-xs ad-name">
-                <input type="number" placeholder="Precio" value="${ad ? ad.price : ''}" class="w-20 neumorphic-input p-2 rounded-lg text-xs ad-price">
-                <select class="w-24 neumorphic-input p-2 rounded-lg text-xs ad-type">
-                    <option value="checkbox" ${ad && ad.type === 'checkbox' ? 'selected' : ''}>Múltiple</option>
-                    <option value="radio" ${ad && ad.type === 'radio' ? 'selected' : ''}>Único</option>
+                <input type="text" placeholder="Nombre" value="${ad ? ad.name : ''}" class="flex-grow neumorphic-input p-2 rounded-lg text-xs ad-name">
+                <input type="number" placeholder="Precio" value="${ad ? ad.price : ''}" class="w-16 neumorphic-input p-2 rounded-lg text-xs ad-price">
+                <select class="w-20 neumorphic-input p-2 rounded-lg text-xs ad-type">
+                    <option value="checkbox" ${ad && ad.type === 'checkbox' ? 'selected' : ''}>Mult</option>
+                    <option value="radio" ${ad && ad.type === 'radio' ? 'selected' : ''}>Unic</option>
                 </select>
+                <input type="number" placeholder="ID Ext" value="${ad ? (ad.id_product || '') : ''}" class="w-16 neumorphic-input p-2 rounded-lg text-xs ad-ext-id">
+                <input type="number" placeholder="Co" value="${ad ? (ad.id_companie || '') : ''}" class="w-12 neumorphic-input p-2 rounded-lg text-xs ad-ext-co">
+                <input type="number" placeholder="Pt" value="${ad ? (ad.id_point || '') : ''}" class="w-12 neumorphic-input p-2 rounded-lg text-xs ad-ext-pt">
                 <button type="button" onclick="this.parentElement.remove()" class="p-2 neumorphic-button rounded-lg text-red-500">
                     <i data-lucide="trash-2" class="w-3 h-3"></i>
                 </button>
@@ -797,6 +815,10 @@
                         <label class="block text-sm mb-1">Instrucciones Cocina</label>
                         <input type="text" id="item-kitchen" value="${item ? (item.kitchenGuide || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg">
                     </div>
+                    <div>
+                        <label class="block text-sm mb-1">URL de Imagen (Opcional)</label>
+                        <input type="url" id="item-image" value="${item ? (item.image || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg" placeholder="https://...">
+                    </div>
 
                     <div class="border-t border-[var(--light-shadow)] pt-4 mt-2">
                         <div class="flex justify-between items-center mb-2">
@@ -805,9 +827,7 @@
                                 <i data-lucide="plus" class="w-3 h-3"></i> Agregar
                             </button>
                         </div>
-                        <div id="adicionales-container" class="space-y-2">
-                            <!-- Rows added dynamically -->
-                        </div>
+                        <div id="adicionales-container" class="space-y-2"></div>
                     </div>
 
                     <div class="md:col-span-2 border-t border-[var(--light-shadow)] pt-4 mt-2">
@@ -853,7 +873,20 @@
                     const name = row.querySelector('.ad-name').value;
                     const price = parseInt(row.querySelector('.ad-price').value);
                     const type = row.querySelector('.ad-type').value;
-                    if (name) adicionales.push({ name, price: price || 0, type });
+                    const id_product = row.querySelector('.ad-ext-id').value;
+                    const id_companie = row.querySelector('.ad-ext-co').value;
+                    const id_point = row.querySelector('.ad-ext-pt').value;
+                    
+                    if (name) {
+                        adicionales.push({ 
+                            name, 
+                            price: price || 0, 
+                            type,
+                            id_product: id_product ? parseInt(id_product) : null,
+                            id_companie: id_companie ? parseInt(id_companie) : null,
+                            id_point: id_point ? parseInt(id_point) : null
+                        });
+                    }
                 });
 
                 const newItem = {
@@ -861,6 +894,7 @@
                     description: document.getElementById('item-desc').value,
                     basePrice: parseInt(document.getElementById('item-price').value),
                     id: parseInt(document.getElementById('item-order-id').value),
+                    image: document.getElementById('item-image').value,
                     kitchenGuide: document.getElementById('item-kitchen').value,
                     active: document.getElementById('item-active').checked,
                     adicionales: adicionales,
@@ -926,9 +960,16 @@
 
             currentPromos.forEach(promo => {
                 const card = document.createElement('div');
-                card.className = 'neumorphic-flat rounded-2xl overflow-hidden';
+                card.className = `neumorphic-flat rounded-2xl overflow-hidden ${!promo.active ? 'opacity-50' : ''}`;
                 card.innerHTML = `
-                    <img src="${promo.image}" class="w-full h-40 object-cover">
+                    <div class="relative">
+                        <img src="${promo.image}" class="w-full h-40 object-cover">
+                        <div class="absolute top-2 right-2">
+                            <span class="text-[10px] px-2 py-1 rounded-full ${promo.active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'} uppercase font-bold">
+                                ${promo.active ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </div>
+                    </div>
                     <div class="p-4">
                         <h3 class="font-bold text-lg">${promo.name}</h3>
                         <p class="text-xs text-gray-500 mb-2 line-clamp-2">${promo.description}</p>
@@ -1000,6 +1041,11 @@
                         <p class="text-[10px] text-gray-500 mt-1">${promo && promo.expiresAt ? 'Actualmente expira el: ' + new Date(promo.expiresAt).toLocaleString() : 'La promoción se eliminará automáticamente al pasar este tiempo.'}</p>
                     </div>
 
+                    <div class="flex items-center gap-2 pt-2">
+                        <input type="checkbox" id="promo-active" ${promo ? (promo.active ? 'checked' : '') : 'checked'} class="w-4 h-4">
+                        <label class="text-sm">Promoción Activa</label>
+                    </div>
+
                     <div class="border-t border-[var(--light-shadow)] pt-4 mt-2">
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="font-bold text-sm text-gray-500 uppercase">Adicionales / Variantes</h3>
@@ -1007,9 +1053,7 @@
                                 <i data-lucide="plus" class="w-3 h-3"></i> Agregar
                             </button>
                         </div>
-                        <div id="adicionales-container" class="space-y-2">
-                            <!-- Rows added dynamically -->
-                        </div>
+                        <div id="adicionales-container" class="space-y-2"></div>
                     </div>
 
                     <div class="flex gap-4 pt-4">
@@ -1032,7 +1076,20 @@
                     const name = row.querySelector('.ad-name').value;
                     const price = parseInt(row.querySelector('.ad-price').value);
                     const type = row.querySelector('.ad-type').value;
-                    if (name) adicionales.push({ name, price: price || 0, type });
+                    const id_product = row.querySelector('.ad-ext-id').value;
+                    const id_companie = row.querySelector('.ad-ext-co').value;
+                    const id_point = row.querySelector('.ad-ext-pt').value;
+                    
+                    if (name) {
+                        adicionales.push({ 
+                            name, 
+                            price: price || 0, 
+                            type,
+                            id_product: id_product ? parseInt(id_product) : null,
+                            id_companie: id_companie ? parseInt(id_companie) : null,
+                            id_point: id_point ? parseInt(id_point) : null
+                        });
+                    }
                 });
 
                 const data = {
@@ -1041,6 +1098,7 @@
                     basePrice: parseInt(document.getElementById('promo-basePrice').value),
                     image: document.getElementById('promo-image').value,
                     duration: durationVal ? parseInt(durationVal) : (promo ? null : null),
+                    active: document.getElementById('promo-active').checked,
                     adicionales: adicionales,
                     externalMapping: {
                         id_product: parseInt(document.getElementById('promo-ext-id').value) || null,

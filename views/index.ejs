@@ -346,6 +346,9 @@
             <button id="close-item-modal-btn" class="neumorphic-button p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <div class="p-6">
+            <div id="item-modal-image-container" class="mb-4 h-48 rounded-xl overflow-hidden hidden">
+                <img id="item-modal-image" src="" alt="" class="w-full h-full object-cover">
+            </div>
             <p id="item-modal-desc" class="text-color text-sm leading-relaxed mb-4"></p>
             
             <div id="item-adicionales-container" class="mb-4 space-y-2">
@@ -713,11 +716,15 @@
         function renderPromoCard(item, imageUrl, container) {
             const displayPrice = item.basePrice;
             const priceText = displayPrice === 0 ? 'Ver precios' : `$${displayPrice.toLocaleString()}`;
+            const defaultImg = 'https://raw.githubusercontent.com/DrkBotBase/delivery/refs/heads/master/public/assets/images/menu_logo.png';
+            const finalImg = imageUrl || defaultImg;
             
             const promoEl = document.createElement('div');
             promoEl.className = 'flex-shrink-0 w-64 h-40 md:w-80 md:h-48 rounded-2xl overflow-hidden snap-start cursor-pointer neumorphic-flat relative group';
             promoEl.innerHTML = `
-                <img src="${imageUrl}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <img src="${finalImg}" alt="${item.name}" 
+                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                     onerror="this.src='${defaultImg}'">
                 <div class="absolute bottom-3 left-3">
                     <div class="bg-[#ffd422] px-3 py-2 rounded-xl border border-[var(--light-shadow)] shadow-lg inline-block max-w-[180px] md:max-w-[220px]">
                         <div class="flex flex-col gap-0">
@@ -841,6 +848,18 @@
             itemModal.instructions.value = ''; 
             itemModal.qty.textContent = '1';
             
+            const imgContainer = document.getElementById('item-modal-image-container');
+            const imgElement = document.getElementById('item-modal-image');
+            const defaultImg = 'https://raw.githubusercontent.com/DrkBotBase/delivery/refs/heads/master/public/assets/images/menu_logo.png';
+            
+            if (item.image || item.isPromo) {
+                imgContainer.classList.remove('hidden');
+                imgElement.src = item.image || defaultImg;
+                imgElement.onerror = () => { imgElement.src = defaultImg; };
+            } else {
+                imgContainer.classList.add('hidden');
+            }
+            
             const adsContainer = document.getElementById('item-adicionales-container');
             adsContainer.innerHTML = '';
             
@@ -860,7 +879,13 @@
                     
                     adEl.innerHTML = `
                         <div class="flex items-center gap-3">
-                            <input type="${inputType}" name="${inputName}" class="adicional-input w-5 h-5 accent-lime-500" data-name="${ad.name}" data-price="${ad.price}" onchange="calculateItemPrice()">
+                            <input type="${inputType}" name="${inputName}" class="adicional-input w-5 h-5 accent-lime-500" 
+                                data-name="${ad.name}" 
+                                data-price="${ad.price}" 
+                                data-id-product="${ad.id_product || ''}" 
+                                data-id-companie="${ad.id_companie || ''}" 
+                                data-id-point="${ad.id_point || ''}" 
+                                onchange="calculateItemPrice()">
                             <span class="text-sm font-medium text-color">${ad.name}</span>
                         </div>
                         <span class="text-xs font-bold accent-text">+ $${ad.price.toLocaleString()}</span>
@@ -893,7 +918,10 @@
             document.querySelectorAll('.adicional-input:checked').forEach(cb => {
                 adicionales.push({
                     name: cb.dataset.name,
-                    price: parseFloat(cb.dataset.price)
+                    price: parseFloat(cb.dataset.price),
+                    id_product: cb.dataset.idProduct ? parseInt(cb.dataset.idProduct) : null,
+                    id_companie: cb.dataset.idCompanie ? parseInt(cb.dataset.idCompanie) : null,
+                    id_point: cb.dataset.idPoint ? parseInt(cb.dataset.idPoint) : null
                 });
             });
 
@@ -991,51 +1019,53 @@
         }
         
         function renderMenu() {
-            menuContainer.innerHTML = '';
-            
-            window.restaurantData.menu.forEach((cat, index) => {
-                const isFirst = index === 0;
-                const accordionClass = isFirst ? 
-                    'category-accordion neumorphic-flat rounded-2xl active' : 
-                    'category-accordion neumorphic-flat rounded-2xl';
-                
-                const accordion = document.createElement('div');
-                accordion.className = accordionClass;
-                accordion.innerHTML = `
-                    <button class="category-header w-full p-6 flex justify-between items-center text-left focus:outline-none">
-                        <h2 class="text-xl md:text-2xl font-black tracking-tight text-color">${cat.category}</h2>
-                        <i data-lucide="chevron-down" class="chevron-icon w-6 h-6 text-color"></i>
-                    </button>
-                    <div class="category-content">
-                        <div class="space-y-4">
-                        ${cat.items.map(item => {
-                            const displayPrice = item.basePrice;
-                            const priceText = displayPrice === 0 ? 'Ver precios' : `$${displayPrice.toLocaleString()}`;
-                            return `
-                                <div class="neumorphic-pressed rounded-2xl p-4 flex items-center gap-4 hover:border hover:border-lime-500/20 transition-all">
-                                  <!--<img src="${item.image || window.restaurantData.config.logoUrl || '/assets/banner.jpg'}" alt="${item.name}" class="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg flex-shrink-0">-->
-                                    <div class="flex-grow">
-                                        <h3 class="text-base md:text-lg font-bold text-color">${item.name}</h3>
-                                        <p class="text-xs text-gray-400 my-1 leading-relaxed">${item.description}</p>
-                                        <p class="text-md md:text-lg font-black accent-text mt-2">${priceText}</p>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <button class="select-item-btn neumorphic-button text-black font-bold p-3 rounded-xl hover:scale-105 active:scale-95 transition flex items-center justify-center" style="background-color: var(--primary-color);" data-id="${item.id}">
-                                            <i data-lucide="plus" class="w-5 h-5"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                        </div>
-                    </div>
-                `;
-                menuContainer.appendChild(accordion);
-            });
-            lucide.createIcons();
-            updateStatusUI();
-        }
+    menuContainer.innerHTML = '';
+    
+    window.restaurantData.menu.forEach((cat, index) => {
+        const isFirst = index === 0;
+        const accordionClass = isFirst ? 
+            'category-accordion neumorphic-flat rounded-2xl active' : 
+            'category-accordion neumorphic-flat rounded-2xl';
         
+        const accordion = document.createElement('div');
+        accordion.className = accordionClass;
+        accordion.innerHTML = `
+            <button class="category-header w-full p-6 flex justify-between items-center text-left focus:outline-none">
+                <h2 class="text-xl md:text-2xl font-black tracking-tight text-color">${cat.category}</h2>
+                <i data-lucide="chevron-down" class="chevron-icon w-6 h-6 text-color"></i>
+            </button>
+            <div class="category-content">
+                <div class="space-y-4">
+                ${cat.items.map(item => {
+                    const displayPrice = item.basePrice;
+                    const priceText = displayPrice === 0 ? 'Ver precios' : `$${displayPrice.toLocaleString()}`;
+                    const defaultImg = 'https://raw.githubusercontent.com/DrkBotBase/delivery/refs/heads/master/public/assets/images/menu_logo.png';
+                    const imgUrl = item.image || defaultImg;
+                    
+                    return `
+                        <div class="neumorphic-pressed rounded-2xl p-4 flex items-center gap-4 hover:border hover:border-lime-500/20 transition-all">
+                            <div class="flex-grow">
+                                <h3 class="text-base md:text-lg font-bold text-color">${item.name}</h3>
+                                <p class="text-xs text-gray-400 my-1 leading-relaxed">${item.description}</p>
+                                <p class="text-md md:text-lg font-black accent-text mt-2">${priceText}</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <button class="select-item-btn neumorphic-button text-black font-bold p-3 rounded-xl hover:scale-105 active:scale-95 transition flex items-center justify-center" style="background-color: var(--primary-color);" data-id="${item.id}">
+                                    <i data-lucide="plus" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                </div>
+            </div>
+        `;
+        menuContainer.appendChild(accordion);
+    });
+    lucide.createIcons();
+    updateStatusUI();
+  }
+     
         function populateShippingZones() {
             cartModal.shippingZoneSelect.innerHTML = `<option value="" disabled selected>¿Dónde te lo llevamos? *</option>`;
             window.restaurantData.shippingZones.forEach(zone => {

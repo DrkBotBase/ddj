@@ -12,7 +12,10 @@ const OrderSchema = new mongoose.Schema({
         instructions: String,
         adicionales: [{
             name: String,
-            price: Number
+            price: Number,
+            id_product: Number,
+            id_companie: Number,
+            id_point: Number
         }]
     }],
     subtotal: Number,

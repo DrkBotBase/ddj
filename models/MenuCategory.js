@@ -22,7 +22,10 @@ const menuItemSchema = new mongoose.Schema({
     adicionales: [{
         name: String,
         price: Number,
-        type: { type: String, default: 'checkbox' }
+        type: { type: String, default: 'checkbox' },
+        id_product: Number,
+        id_companie: Number,
+        id_point: Number
     }],
     active: { type: Boolean, default: true }
 });
