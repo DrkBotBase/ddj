@@ -56,8 +56,6 @@ webpush.setVapidDetails(
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
 );
-console.log('VAPID details set with public key:', process.env.VAPID_PUBLIC_KEY ? 'Present' : 'MISSING');
-console.log('VAPID private key:', process.env.VAPID_PRIVATE_KEY ? 'Present' : 'MISSING');
 
 async function seedDefaultData() {
     try {
@@ -104,7 +102,6 @@ async function seedDefaultData() {
                 }
             });
             await defaultInfo.save();
-            console.log('Default RestaurantInfo seeded');
         }
 
         const categoryCount = await MenuCategory.countDocuments();
@@ -182,7 +179,6 @@ async function seedDefaultData() {
                 }
             ];
             await MenuCategory.insertMany(defaultMenu);
-            console.log('Default Menu seeded');
         }
     } catch (err) {
         console.error('Error seeding data:', err);
@@ -452,8 +448,6 @@ app.post('/api/notifications/subscribe', async (req, res) => {
         keys.p256dh = keys.p256dh.trim();
         keys.auth = keys.auth.trim();
 
-        console.log(`Subscribing device: ${deviceId || 'unknown'} with endpoint: ${endpoint}`);
-        
         const filter = deviceId ? { deviceId } : { endpoint };
         const update = {
             endpoint,
@@ -470,7 +464,6 @@ app.post('/api/notifications/subscribe', async (req, res) => {
             { upsert: true, new: true }
         );
         
-        console.log('Subscription saved/updated successfully:', result._id);
         res.status(201).json({ success: true });
     } catch (error) {
         console.error('Error saving subscription:', error);
@@ -490,8 +483,6 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
 
     try {
         const subscriptions = await Subscription.find();
-        console.log(`Sending notifications to ${subscriptions.length} subscribers`);
-        console.log('Using VAPID Public Key:', process.env.VAPID_PUBLIC_KEY ? process.env.VAPID_PUBLIC_KEY.substring(0, 10) + '...' : 'MISSING');
         
         const notifications = subscriptions.map(sub => {
             if (!sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
@@ -516,7 +507,7 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
             };
 
             return webpush.sendNotification(pushSubscription, payload, options)
-                .then(() => console.log(`Notification sent to ${sub.endpoint}`))
+                .then(() => console.log('Notification sent'))
                 .catch(error => {
                     console.error(`Error sending to ${sub.endpoint}:`, {
                         statusCode: error.statusCode,
@@ -526,8 +517,7 @@ app.post('/api/notifications/send', isAuthenticated, async (req, res) => {
                     });
                     
                     if (error.statusCode === 410 || error.statusCode === 404) {
-                        console.log(`Marking invalid subscription for deletion: ${sub._id}`);
-                        return Subscription.deleteOne({ _id: sub._id });
+                      return Subscription.deleteOne({ _id: sub._id });
                     }
                 });
         });

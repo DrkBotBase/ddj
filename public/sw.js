@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mjfood-cache-v4.6';
+const CACHE_NAME = 'mjfood-cache-v5';
 const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [
@@ -9,13 +9,13 @@ const ASSETS_TO_CACHE = [
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/lucide@latest',
   'https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp',
-  'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp'
+  'https://back.vinapp.co//store/200x117240923-2025-08-06-16-47-12.webp',
+  'https://back.vinapp.co//store/1000x500259933-2025-08-06-16-48-37.webp'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Installing Service Worker and caching assets');
       return cache.addAll(ASSETS_TO_CACHE).catch(err => {
         console.warn('Algunos recursos no se pudieron cachear proactivamente:', err);
       });
@@ -30,7 +30,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
