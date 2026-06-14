@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mjfood-cache-v5';
+const CACHE_NAME = 'mjfood-cache-v5.2';
 const rutaBase = '/';
 
 const ASSETS_TO_CACHE = [

@@ -176,7 +176,13 @@
                     </div>
                     <div>
                         <label class="block text-sm mb-1">URL Logo/Banner</label>
-                        <input type="text" name="logoUrl" value="<%= restaurantInfo.config.logoUrl %>" class="w-full neumorphic-input p-3 rounded-lg text-color">
+                        <div class="flex gap-2">
+                            <input type="text" name="logoUrl" id="config-logo-url" value="<%= restaurantInfo.config.logoUrl %>" class="flex-grow neumorphic-input p-3 rounded-lg text-color">
+                            <label class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2 cursor-pointer">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <input type="file" class="hidden" onchange="handleImageUpload(this, 'config-logo-url')">
+                            </label>
+                        </div>
                     </div>
                     <div class="md:col-span-2 border-t border-[var(--light-shadow)] pt-4 mt-2">
                         <h3 class="font-bold mb-4">Datos de Transferencia</h3>
@@ -629,6 +635,43 @@
             if (res.ok) loadOrders();
         }
 
+        async function handleImageUpload(input, targetUrlInputId) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const btn = input.parentElement.querySelector('button') || input;
+            const originalContent = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                if (btn.tagName === 'BUTTON') btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Subiendo...';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById(targetUrlInputId).value = data.url;
+                    showToast('Imagen subida con éxito', 'success');
+                } else {
+                    showToast(data.message || 'Error al subir imagen', 'error');
+                }
+            } catch (err) {
+                console.error('Upload error:', err);
+                showToast('Error de conexión al subir imagen', 'error');
+            } finally {
+                btn.disabled = false;
+                if (btn.tagName === 'BUTTON') btn.innerHTML = originalContent;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
         // --- Configuración ---
         document.getElementById('config-form').onsubmit = async (e) => {
             e.preventDefault();
@@ -816,8 +859,14 @@
                         <input type="text" id="item-kitchen" value="${item ? (item.kitchenGuide || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm mb-1">URL de Imagen (Opcional)</label>
-                        <input type="url" id="item-image" value="${item ? (item.image || '') : ''}" class="w-full neumorphic-input p-3 rounded-lg" placeholder="https://...">
+                        <label class="block text-sm mb-1">URL de Imagen o Subir Archivo</label>
+                        <div class="flex gap-2">
+                            <input type="url" id="item-image" value="${item ? (item.image || '') : ''}" class="flex-grow neumorphic-input p-3 rounded-lg" placeholder="https://...">
+                            <label class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2 cursor-pointer">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <input type="file" class="hidden" onchange="handleImageUpload(this, 'item-image')">
+                            </label>
+                        </div>
                     </div>
 
                     <div class="border-t border-[var(--light-shadow)] pt-4 mt-2">
@@ -1014,8 +1063,14 @@
                             <input type="number" id="promo-basePrice" value="${promo ? promo.basePrice : ''}" required class="w-full neumorphic-input p-3 rounded-lg text-color">
                         </div>
                         <div>
-                            <label class="block text-sm mb-1">URL de la Imagen</label>
-                            <input type="url" id="promo-image" value="${promo ? promo.image : ''}" required class="w-full neumorphic-input p-3 rounded-lg text-color" placeholder="https://...">
+                            <label class="block text-sm mb-1">Imagen (URL o Subir)</label>
+                            <div class="flex gap-2">
+                                <input type="url" id="promo-image" value="${promo ? promo.image : ''}" required class="flex-grow neumorphic-input p-3 rounded-lg text-color" placeholder="https://...">
+                                <label class="neumorphic-button px-4 py-2 rounded-lg text-sm flex items-center gap-2 cursor-pointer">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                    <input type="file" class="hidden" onchange="handleImageUpload(this, 'promo-image')">
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div class="border-t border-[var(--light-shadow)] pt-4 mt-2">

@@ -50,6 +50,26 @@ const Subscription = require('./models/Subscription');
 const User = require('./models/User');
 const webpush = require('web-push');
 const axios = require('axios');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+    api_key: process.env.CLOUDINARY_API_KEY || '',
+    api_secret: process.env.CLOUDINARY_API_SECRET || ''
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'mjfood-menu',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+        transformation: [{ width: 800, height: 800, crop: 'limit' }]
+    },
+});
+
+const upload = multer({ storage: storage });
 
 webpush.setVapidDetails(
     process.env.VAPID_EMAIL || 'mailto:admin@example.com',
@@ -228,7 +248,7 @@ app.get('/', async (req, res) => {
 
         let meta = {
             title: restaurantInfo.config.nombre,
-            description: "Las mejor comida rápida y combos para disfrutar desde casa.",
+            description: "La mejor comida y combos para disfrutar desde casa.",
             image: restaurantInfo.config.logoUrl || ""
         };
 
@@ -314,6 +334,18 @@ app.get('/admin', isAuthenticated, async (req, res) => {
     const restaurantInfo = await RestaurantInfo.findOne();
     const categories = await MenuCategory.find().sort('order');
     res.render('admin', { restaurantInfo, categories });
+});
+
+app.post('/api/upload', isAuthenticated, upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No se subió ningún archivo' });
+        }
+        res.json({ success: true, url: req.file.path });
+    } catch (error) {
+        console.error('Error uploading to Cloudinary:', error);
+        res.status(500).json({ success: false, message: 'Error al subir la imagen' });
+    }
 });
 
 app.get('/api/promotions', async (req, res) => {
