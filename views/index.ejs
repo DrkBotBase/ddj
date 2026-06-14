@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Junior Comida Rapida by: MJFOOD</title>
+    <title><%= meta.title %></title>
     
-    <meta name="description" content="La mejor comida rápida y combos para disfrutar desde casa con envío rápido.">
+    <meta name="description" content="<%= meta.description %>">
     <meta name="theme-color" content="#edebe4">
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="https://back.vinapp.co//store/1000x500245093-2025-08-06-16-47-12.webp">
+    <link rel="apple-touch-icon" href="<%= meta.image %>">
     
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow">
     
-    <meta property="og:title" content="Junior Comida Rapida by: MJFOOD">
-    <meta property="og:description" content="Las mejor comida rápida y combos para disfrutar desde casa.">
-    <meta property="og:image" content="">
-    <meta property="og:type" content="Restaurant">
+    <meta property="og:title" content="<%= meta.title %>">
+    <meta property="og:description" content="<%= meta.description %>">
+    <meta property="og:image" content="<%= meta.image %>">
+    <meta property="og:type" content="website">
     <meta property="og:locale" content="es_ES">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -662,14 +662,11 @@
             populateHoursModal();
             loadClientData();
             
-            // Lógica para abrir producto por parámetro en la URL
             const urlParams = new URLSearchParams(window.location.search);
             const productId = urlParams.get('item');
             if (productId) {
-                // Buscamos en el menú normal
                 let item = data.menu.flatMap(cat => cat.items).find(i => String(i.id) === productId);
                 
-                // Si no está, buscamos en promociones de la base de datos
                 if (!item && window.dbPromotions) {
                     const promo = window.dbPromotions.find(p => String(p._id) === productId || String(p.itemId) === productId);
                     if (promo) {
@@ -692,7 +689,7 @@
                 }
                 
                 if (item) {
-                    setTimeout(() => openItemModal(item), 2000); // Esperamos a que el loader termine
+                    setTimeout(() => openItemModal(item), 2000);
                 }
             }
 
@@ -716,7 +713,6 @@
                 if (navigator.share) {
                     await navigator.share(shareData);
                 } else {
-                    // Fallback a copiar al portapapeles
                     await navigator.clipboard.writeText(shareUrl);
                     showToast('¡Enlace copiado al portapapeles!', 'success');
                 }
@@ -947,17 +943,19 @@
                     const inputName = isRadio ? 'adicional-radio-group' : `adicional-checkbox-${idx}`;
                     
                     adEl.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <input type="${inputType}" name="${inputName}" class="adicional-input w-5 h-5 accent-lime-500" 
-                                data-name="${ad.name}" 
-                                data-price="${ad.price}" 
-                                data-id-product="${ad.id_product || ''}" 
-                                data-id-companie="${ad.id_companie || ''}" 
-                                data-id-point="${ad.id_point || ''}" 
-                                onchange="calculateItemPrice()">
-                            <span class="text-sm font-medium text-color">${ad.name}</span>
-                        </div>
-                        <span class="text-xs font-bold accent-text">+ $${ad.price.toLocaleString()}</span>
+                      <div class="flex w-full items-start gap-3">
+                          <input type="${inputType}" name="${inputName}" class="adicional-input w-5 h-5 accent-lime-500 flex-shrink-0 mt-0.5" 
+                              data-name="${ad.name}" 
+                              data-price="${ad.price}" 
+                              data-id-product="${ad.id_product || ''}" 
+                              data-id-companie="${ad.id_companie || ''}" 
+                              data-id-point="${ad.id_point || ''}" 
+                              onchange="calculateItemPrice()">
+                          <div class="flex-1">
+                              <span class="text-sm font-medium text-color block">${ad.name}</span>
+                          </div>
+                          <span class="text-xs font-bold accent-text flex-shrink-0">+ $${ad.price.toLocaleString()}</span>
+                      </div>
                     `;
                     adsContainer.appendChild(adEl);
                 });

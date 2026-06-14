@@ -226,18 +226,52 @@ app.get('/', async (req, res) => {
             }))
         };
 
+        let meta = {
+            title: restaurantInfo.config.nombre,
+            description: "Las mejor comida rápida y combos para disfrutar desde casa.",
+            image: restaurantInfo.config.logoUrl || ""
+        };
+
+        const productId = req.query.item;
+        if (productId) {
+            let foundItem = null;
+            for (const cat of menuCategories) {
+                foundItem = cat.items.find(i => String(i.id) === productId);
+                if (foundItem) break;
+            }
+
+            if (!foundItem && dbPromotions) {
+                foundItem = dbPromotions.find(p => String(p._id) === productId || String(p.itemId) === productId);
+            }
+
+            if (foundItem) {
+                meta.title = `${foundItem.name} | ${restaurantInfo.config.nombre}`;
+                meta.description = foundItem.description || meta.description;
+                if (foundItem.image) {
+                    meta.image = foundItem.image;
+                }
+            }
+        }
+
         res.render('index', { 
             likes, 
             dbPromotions, 
             restaurantData,
+            meta,
             vapidPublicKey: process.env.VAPID_PUBLIC_KEY
         });
     } catch (error) {
         console.error(error);
+        const meta = {
+            title: "MJFOOD",
+            description: "La mejor comida rápida y combos para disfrutar desde casa.",
+            image: ""
+        };
         res.render('index', { 
             likes: 0, 
             dbPromotions: [], 
             restaurantData: null,
+            meta,
             vapidPublicKey: process.env.VAPID_PUBLIC_KEY
         });
     }
